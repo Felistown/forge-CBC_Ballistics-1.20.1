@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "cbc_ballistics:block/ballistic_calculator",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cbc_ballistics:block/ballistic_calculator"
+    },
+    "facing=south": {
+      "model": "cbc_ballistics:block/ballistic_calculator",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "cbc_ballistics:block/ballistic_calculator",
+      "y": 270
+    }
+  }
+}

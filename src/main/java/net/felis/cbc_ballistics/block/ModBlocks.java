@@ -1,0 +1,66 @@
+package net.felis.cbc_ballistics.block;
+
+
+import com.simibubi.create.Create;
+import com.simibubi.create.infrastructure.config.CStress;
+import com.tterrag.registrate.Registrate;
+import com.tterrag.registrate.builders.BlockBuilder;
+import net.felis.cbc_ballistics.CBS_Ballistics;
+import net.felis.cbc_ballistics.block.custom.CalculatorBlock;
+import net.felis.cbc_ballistics.item.ModItems;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import com.simibubi.create.foundation.data.BlockStateGen;
+import com.simibubi.create.foundation.data.AssetLookup;
+import com.simibubi.create.foundation.data.ModelGen;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.foundation.data.SharedProperties;
+import com.simibubi.create.foundation.data.TagGen;
+import java.util.function.Supplier;
+
+public class ModBlocks {
+    public static final CreateRegistrate REGISTRATE = CreateRegistrate.create("cbc_ballisics");
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, CBS_Ballistics.MODID);
+
+    public static final RegistryObject<Block> BALLISTIC_CALCULATOR = registerBlock("ballistic_calculator", () -> new CalculatorBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(0.10f, 3.5F).sound(SoundType.METAL)));
+    public static final RegistryObject<Block> CANNON_CONTROL = ((BlockBuilder)((BlockBuilder)((BlockBuilder)REGISTRATE.block("cannon_control", CalculatorBlock::new).initialProperties(SharedProperties::stone).properties((p) -> {
+        return p.noOcclusion().mapColor(MapColor.PODZOL);
+    }).addLayer(() -> {
+        return RenderType::cutoutMipped;
+    }).transform(CStress.setNoImpact())).transform(TagGen.axeOrPickaxe())).blockstate((c, p) -> {
+        BlockStateGen.axisBlock(c, p, AssetLookup.forPowered(c, p));
+    }).item().transform(ModelGen.customItemModel())).register();
+
+    //((BlockBuilder)((BlockBuilder)((BlockBuilder)REGISTRATE.block("gearshift", GearshiftBlock::new).initialProperties(SharedProperties::stone).properties((p) -> {
+    //            return p.noOcclusion().mapColor(MapColor.PODZOL);
+    //        }).addLayer(() -> {
+    //            return RenderType::cutoutMipped;
+    //        }).transform(CStress.setNoImpact())).transform(TagGen.axeOrPickaxe())).blockstate((c, p) -> {
+    //            BlockStateGen.axisBlock(c, p, AssetLookup.forPowered(c, p));
+    //        }).item().transform(ModelGen.customItemModel())).register();
+
+    private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
+        RegistryObject<T> toReturn = BLOCKS.register(name, block);
+        registerBlockItem(name, toReturn);
+        return toReturn;
+    }
+
+    private static <T extends Block> RegistryObject<Item> registerBlockItem(String name, RegistryObject<T> block) {
+        return ModItems.ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
+    }
+
+    public static void register(IEventBus eventBus) {
+        BLOCKS.register(eventBus);
+    }
+
+}

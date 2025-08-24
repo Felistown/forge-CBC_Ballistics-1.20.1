@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "forge:separate_transforms",
+  "base": {
+    "parent": "cbc_ballistics:item/rangefinder_3d"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "cbc_ballistics:item/rangefinder_2d"
+    },
+    "ground": {
+      "parent": "cbc_ballistics:item/rangefinder_2d"
+    },
+    "fixed": {
+      "parent": "cbc_ballistics:item/rangefinder_2d"
+    },
+    "head": {
+      "parent": "cbc_ballistics:item/rangefinder_3d"
+    }
+  }
+}

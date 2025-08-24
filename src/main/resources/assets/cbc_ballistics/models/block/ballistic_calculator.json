@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "cbc_ballistics:block/ballistic_calculator_face",
+    "side": "cbc_ballistics:block/ballistic_calculator",
+    "top": "cbc_ballistics:block/ballistic_calculator"
+  }
+}

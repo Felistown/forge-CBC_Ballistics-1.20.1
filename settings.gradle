@@ -1,0 +1,20 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
+        maven { url = 'https://maven.parchmentmc.org' }
+        maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
+        maven { url = "https://maven.ithundxr.dev/mirror" } // Registrate
+        maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // ForgeConfigAPIPort
+    }
+
+}
+
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+}
+
