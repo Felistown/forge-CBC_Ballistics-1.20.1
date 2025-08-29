@@ -34,7 +34,7 @@ public class CBS_Ballistics
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public static final CreateRegistrate REGISTRATE = CreateRegistrate.create("cbc_ballistics");
+    public static final CreateRegistrate REGISTRATE = CreateRegistrate.create(MODID);
 
     //public CBS_Ballistics(FMLJavaModLoadingContext context)
     public CBS_Ballistics()
@@ -44,6 +44,8 @@ public class CBS_Ballistics
         ModCreativeModTabs.register(modEventBus);
 
         MinecraftForge.EVENT_BUS.register(new ModClientEvents());
+
+        REGISTRATE.registerEventListeners(modEventBus);
 
         ModItems.register(modEventBus);
 

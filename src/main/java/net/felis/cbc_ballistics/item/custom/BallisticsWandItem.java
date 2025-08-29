@@ -1,6 +1,7 @@
 package net.felis.cbc_ballistics.item.custom;
 
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
+import net.felis.cbc_ballistics.block.entity.CannonControllerBlockEntity;
 import net.felis.cbc_ballistics.util.IHaveData;
 import net.felis.cbc_ballistics.util.calculator.Projectile;
 import net.minecraft.client.Minecraft;
@@ -68,6 +69,11 @@ public class BallisticsWandItem extends Item implements IHaveData {
                         CannonMountBlockEntity block1 = ((CannonMountBlockEntity) block);
                         block1.setYaw(tags.getFloat("yaw"));
                         block1.setPitch(tags.getFloat("pitch"));
+                    } else if(block instanceof CannonControllerBlockEntity) {
+                        CompoundTag tags = pContext.getItemInHand().getTag();
+                        CannonControllerBlockEntity block1 = (CannonControllerBlockEntity) block;
+                        block1.setTargetYaw(tags.getFloat("yaw"));
+                        block1.setTargetPitch(tags.getFloat("pitch"));
                     }
                 }
             } else {

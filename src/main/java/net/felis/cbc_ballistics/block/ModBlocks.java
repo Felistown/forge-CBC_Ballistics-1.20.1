@@ -5,8 +5,10 @@ import com.simibubi.create.Create;
 import com.simibubi.create.infrastructure.config.CStress;
 import com.tterrag.registrate.Registrate;
 import com.tterrag.registrate.builders.BlockBuilder;
+import com.tterrag.registrate.util.entry.RegistryEntry;
 import net.felis.cbc_ballistics.CBS_Ballistics;
 import net.felis.cbc_ballistics.block.custom.CalculatorBlock;
+import net.felis.cbc_ballistics.block.custom.CannonControllerBlock;
 import net.felis.cbc_ballistics.item.ModItems;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.item.BlockItem;
@@ -29,25 +31,17 @@ import com.simibubi.create.foundation.data.TagGen;
 import java.util.function.Supplier;
 
 public class ModBlocks {
-    public static final CreateRegistrate REGISTRATE = CreateRegistrate.create("cbc_ballisics");
+    public static final CreateRegistrate REGISTRATE = CBS_Ballistics.REGISTRATE;
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, CBS_Ballistics.MODID);
 
     public static final RegistryObject<Block> BALLISTIC_CALCULATOR = registerBlock("ballistic_calculator", () -> new CalculatorBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(0.10f, 3.5F).sound(SoundType.METAL)));
-    public static final RegistryObject<Block> CANNON_CONTROL = ((BlockBuilder)((BlockBuilder)((BlockBuilder)REGISTRATE.block("cannon_control", CalculatorBlock::new).initialProperties(SharedProperties::stone).properties((p) -> {
-        return p.noOcclusion().mapColor(MapColor.PODZOL);
-    }).addLayer(() -> {
-        return RenderType::cutoutMipped;
-    }).transform(CStress.setNoImpact())).transform(TagGen.axeOrPickaxe())).blockstate((c, p) -> {
-        BlockStateGen.axisBlock(c, p, AssetLookup.forPowered(c, p));
-    }).item().transform(ModelGen.customItemModel())).register();
 
-    //((BlockBuilder)((BlockBuilder)((BlockBuilder)REGISTRATE.block("gearshift", GearshiftBlock::new).initialProperties(SharedProperties::stone).properties((p) -> {
-    //            return p.noOcclusion().mapColor(MapColor.PODZOL);
-    //        }).addLayer(() -> {
-    //            return RenderType::cutoutMipped;
-    //        }).transform(CStress.setNoImpact())).transform(TagGen.axeOrPickaxe())).blockstate((c, p) -> {
-    //            BlockStateGen.axisBlock(c, p, AssetLookup.forPowered(c, p));
-    //        }).item().transform(ModelGen.customItemModel())).register();
+    public static final RegistryEntry<CannonControllerBlock> CANNON_CONTROL = REGISTRATE
+            .block("cannon_control", CannonControllerBlock::new)
+            .properties(p -> BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(0.10f, 3.5F).sound(SoundType.METAL))
+            .blockstate((c, p) -> p.horizontalBlock(c.getEntry(), AssetLookup.standardModel(c, p)))
+            .simpleItem()
+            .register();
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
