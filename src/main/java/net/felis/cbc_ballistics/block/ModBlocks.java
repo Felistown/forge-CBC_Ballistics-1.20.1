@@ -1,16 +1,11 @@
 package net.felis.cbc_ballistics.block;
 
 
-import com.simibubi.create.Create;
-import com.simibubi.create.infrastructure.config.CStress;
-import com.tterrag.registrate.Registrate;
-import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.util.entry.RegistryEntry;
-import net.felis.cbc_ballistics.CBS_Ballistics;
+import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.block.custom.CalculatorBlock;
 import net.felis.cbc_ballistics.block.custom.CannonControllerBlock;
 import net.felis.cbc_ballistics.item.ModItems;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -22,17 +17,14 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-import com.simibubi.create.foundation.data.BlockStateGen;
 import com.simibubi.create.foundation.data.AssetLookup;
-import com.simibubi.create.foundation.data.ModelGen;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.foundation.data.SharedProperties;
-import com.simibubi.create.foundation.data.TagGen;
+
 import java.util.function.Supplier;
 
 public class ModBlocks {
-    public static final CreateRegistrate REGISTRATE = CBS_Ballistics.REGISTRATE;
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, CBS_Ballistics.MODID);
+    public static final CreateRegistrate REGISTRATE = CBC_Ballistics.REGISTRATE;
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, CBC_Ballistics.MODID);
 
     public static final RegistryObject<Block> BALLISTIC_CALCULATOR = registerBlock("ballistic_calculator", () -> new CalculatorBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(0.10f, 3.5F).sound(SoundType.METAL)));
 

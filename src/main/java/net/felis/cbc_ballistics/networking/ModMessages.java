@@ -1,6 +1,6 @@
 package net.felis.cbc_ballistics.networking;
 
-import net.felis.cbc_ballistics.CBS_Ballistics;
+import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.networking.packet.RangefindC2SPacket;
 import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -13,7 +13,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public class ModMessages {
 
     private static SimpleChannel INSTANCE= NetworkRegistry.ChannelBuilder
-            .named(new ResourceLocation(CBS_Ballistics.MODID, "messages"))
+            .named(new ResourceLocation(CBC_Ballistics.MODID, "messages"))
             .networkProtocolVersion(() -> "1.0")
             .clientAcceptedVersions(s -> true)
             .serverAcceptedVersions(s -> true)

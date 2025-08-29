@@ -1,6 +1,6 @@
 package net.felis.cbc_ballistics.entity;
 
-import net.felis.cbc_ballistics.CBS_Ballistics;
+import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.entity.custom.RangefinderEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -11,7 +11,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ModEntities {
     public static final DeferredRegister<EntityType<?>>  ENTITY_TYPES =
-            DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, CBS_Ballistics.MODID);
+            DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, CBC_Ballistics.MODID);
 
 
 

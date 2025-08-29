@@ -1,6 +1,6 @@
 package net.felis.cbc_ballistics.screen.custom;
 
-import net.felis.cbc_ballistics.CBS_Ballistics;
+import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Ballistic_CalculatorScreen extends Screen {
 
-    private static final ResourceLocation BACKGROUND = new ResourceLocation(CBS_Ballistics.MODID, "textures/gui/calculator/calculator_interface.png");
+    private static final ResourceLocation BACKGROUND = new ResourceLocation(CBC_Ballistics.MODID, "textures/gui/calculator/calculator_interface.png");
     private static final Component CANNON_POS = Component.translatable("block.cbc_ballistics.ballistic_calculator.cannonPos");
     private static final Component TARGET_POS = Component.translatable("block.cbc_ballistics.ballistic_calculator.targetPos");
     private static final Component MIN_PITCH = Component.translatable("block.cbc_ballistics.ballistic_calculator.minPitch");
@@ -377,25 +377,25 @@ public class Ballistic_CalculatorScreen extends Screen {
 
     private ResourceLocation getMaterialButton() {
         if(materialCooldown <= 0) {
-            return new ResourceLocation(CBS_Ballistics.MODID,"textures/gui/calculator/20x8button_up.png");
+            return new ResourceLocation(CBC_Ballistics.MODID,"textures/gui/calculator/20x8button_up.png");
         } else {
-            return new ResourceLocation(CBS_Ballistics.MODID,"textures/gui/calculator/20x8button_down.png");
+            return new ResourceLocation(CBC_Ballistics.MODID,"textures/gui/calculator/20x8button_down.png");
         }
     }
 
     private ResourceLocation getModeButton() {
         if(modeCooldown <= 0) {
-            return new ResourceLocation(CBS_Ballistics.MODID,"textures/gui/calculator/38x8button_up.png");
+            return new ResourceLocation(CBC_Ballistics.MODID,"textures/gui/calculator/38x8button_up.png");
         } else {
-            return new ResourceLocation(CBS_Ballistics.MODID,"textures/gui/calculator/38x8button_down.png");
+            return new ResourceLocation(CBC_Ballistics.MODID,"textures/gui/calculator/38x8button_down.png");
         }
     }
 
     private ResourceLocation getCalculatebutton() {
         if(calculateCooldown <= 0) {
-            return new ResourceLocation(CBS_Ballistics.MODID,"textures/gui/calculator/38x8button_up.png");
+            return new ResourceLocation(CBC_Ballistics.MODID,"textures/gui/calculator/38x8button_up.png");
         } else {
-            return new ResourceLocation(CBS_Ballistics.MODID,"textures/gui/calculator/38x8button_down.png");
+            return new ResourceLocation(CBC_Ballistics.MODID,"textures/gui/calculator/38x8button_down.png");
         }
     }
 

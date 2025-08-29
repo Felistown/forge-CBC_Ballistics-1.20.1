@@ -1,6 +1,6 @@
 package net.felis.cbc_ballistics.item;
 
-import net.felis.cbc_ballistics.CBS_Ballistics;
+import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.block.ModBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -13,7 +13,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModCreativeModTabs {
 
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
-            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CBS_Ballistics.MODID);
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CBC_Ballistics.MODID);
 
     public static final RegistryObject<CreativeModeTab> BALLISTICS_TAB = CREATIVE_MODE_TABS.register("ballistics", () -> CreativeModeTab.builder().icon(() ->  new ItemStack(ModItems.RANGEFINDER.get()))
             .title(Component.translatable("creativetab.ballistics"))

@@ -1,6 +1,6 @@
 package net.felis.cbc_ballistics.event;
 
-import net.felis.cbc_ballistics.CBS_Ballistics;
+import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.RangefindC2SPacket;
@@ -18,7 +18,7 @@ import net.minecraftforge.client.event.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CBS_Ballistics.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 
 public class ModClientEvents {
 
@@ -78,7 +78,7 @@ public class ModClientEvents {
         }
     }
 
-    @Mod.EventBusSubscriber(modid = CBS_Ballistics.MODID, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, value = Dist.CLIENT)
     public static class ClientForgeEvents {
 
         @SubscribeEvent

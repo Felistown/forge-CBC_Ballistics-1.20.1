@@ -26,8 +26,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(CBS_Ballistics.MODID)
-public class CBS_Ballistics
+@Mod(CBC_Ballistics.MODID)
+public class CBC_Ballistics
 {
     // Define mod id in a common place for everything to reference
     public static final String MODID = "cbc_ballistics";
@@ -37,7 +37,7 @@ public class CBS_Ballistics
     public static final CreateRegistrate REGISTRATE = CreateRegistrate.create(MODID);
 
     //public CBS_Ballistics(FMLJavaModLoadingContext context)
-    public CBS_Ballistics()
+    public CBC_Ballistics()
     {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
