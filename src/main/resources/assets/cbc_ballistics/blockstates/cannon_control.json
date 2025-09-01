@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "cbc_ballistics:block/cannon_control",
+      "x": -90
+    },
+    "facing=down": {
+      "model": "cbc_ballistics:block/cannon_control",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "cbc_ballistics:block/cannon_control",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cbc_ballistics:block/cannon_control"
+    },
+    "facing=south": {
+      "model": "cbc_ballistics:block/cannon_control",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "cbc_ballistics:block/cannon_control",
+      "y": 270
+    }
+  }
+}

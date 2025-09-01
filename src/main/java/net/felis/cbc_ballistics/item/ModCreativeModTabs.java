@@ -19,9 +19,11 @@ public class ModCreativeModTabs {
             .title(Component.translatable("creativetab.ballistics"))
             .displayItems((itemDisplayParameters, output) -> {
                 output.accept(ModItems.RANGEFINDER.get());
+                output.accept(ModItems.MANAGER.get());
+                output.accept(ModBlocks.ARTILLERY_COORDINATOR.get());
                 output.accept(ModBlocks.BALLISTIC_CALCULATOR.get());
-                output.accept(ModItems.WAND.get());
                 output.accept(ModBlocks.CANNON_CONTROL.get());
+                output.accept(ModItems.WAND.get());
             }).build());
 
     public  static void register(IEventBus eventBus) {

@@ -1,8 +1,9 @@
 {
-  "item.cbc_ballistics.designator" : "Designator",
   "item.cbc_ballistics.rangefinder" : "Rangefinder",
   "item.cbc_ballistics.ballistics_wand" : "Ballistics debug wand",
+  "item.cbc_ballistics.network_manager": "Artillery network manager",
   "block.cbc_ballistics.ballistic_calculator": "Ballistic Calculator",
+  "block.cbc_ballistics.cannon_control": "Cannon controller",
   "block.cbc_ballistics.ballistic_calculator.cannonPos": "Cannon X, Y and Z",
   "block.cbc_ballistics.ballistic_calculator.targetPos": "Target X, Y and Z",
   "block.cbc_ballistics.ballistic_calculator.minPitch": "Min °",
@@ -37,5 +38,14 @@
   "tooltip.cbc_ballistics.rangefinder.results": "Coordinates: ",
   "tooltip.cbc_ballistics.rangefinder.shift_down.one":"Hold down §eright click§r to scope in. Whilst scoping in, §eleft click§r to rangefind. Maximum range is ~" ,
   "tooltip.cbc_ballistics.rangefinder.shift_down.two":"blocks. Interact with Ballistic Calculator block with this in hand to input rangefinding results.",
-  "tooltip.cbc_ballistics.rangefinder": "Press §eShift§r for more information"
+  "tooltip.cbc_ballistics.rangefinder": "Press §eShift§r for more information",
+  "unit.cbc_ballistics.artillery_network.coordinators": "Coordinators = ",
+  "unit.cbc_ballistics.artillery_network.network": "Tuned to network id = ",
+  "unit.cbc_ballistics.artillery_network.directors": "Directors = ",
+  "unit.cbc_ballistics.artillery_network.directors.id": "-director id = ",
+  "unit.cbc_ballistics.artillery_network.at": ", at: ",
+  "unit.cbc_ballistics.artillery_network.layers": "Cannons = ",
+  "item.cbc_ballistics.network_manager.selected": "Selected director id = ",
+  "item.cbc_ballistics.network_manager.no_selected": "No director selected",
+  "item.cbc_ballistics.network_manager.no_network": "Tune to network to use"
 }

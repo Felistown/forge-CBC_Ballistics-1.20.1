@@ -72,8 +72,7 @@ public class BallisticsWandItem extends Item implements IHaveData {
                     } else if(block instanceof CannonControllerBlockEntity) {
                         CompoundTag tags = pContext.getItemInHand().getTag();
                         CannonControllerBlockEntity block1 = (CannonControllerBlockEntity) block;
-                        block1.setTargetYaw(tags.getFloat("yaw"));
-                        block1.setTargetPitch(tags.getFloat("pitch"));
+                        block1.setTarget(tags.getFloat("pitch"), tags.getFloat("yaw"));
                     }
                 }
             } else {

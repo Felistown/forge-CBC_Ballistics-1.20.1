@@ -2,6 +2,8 @@ package net.felis.cbc_ballistics.block.entity;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import net.felis.cbc_ballistics.screen.custom.Ballistic_CalculatorScreen;
+import net.felis.cbc_ballistics.util.StringToInt;
+import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.calculator.Cannon;
 import net.felis.cbc_ballistics.util.calculator.Projectile;
 import net.felis.cbc_ballistics.util.calculator.Target;
@@ -18,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, IHaveGoggleInformation {
+public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, IHaveGoggleInformation, Director {
 
     private static final Component CAST_IRON = Component.translatable("block.cbc_ballistics.ballistic_calculator.castIron");
     private static final Component STEEL = Component.translatable("block.cbc_ballistics.ballistic_calculator.steel");
@@ -48,6 +50,9 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     private Projectile[] results;
     private boolean ready;
     private boolean tooFar;
+
+    private ArtilleryCoordinatorBlockEntity network;
+    private int id;
 
 
     public CalculatorBlockEntity( BlockPos pPos, BlockState pBlockState) {
@@ -154,7 +159,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("cannonPos", cannonPos);
         setChanged();
         int[] array = new int[3];
-        boolean result = tryLong(cannonPos, array);
+        boolean result = StringToInt.posFromString(cannonPos, array);
         if(result) {
             cPos = array;
             return true;
@@ -182,6 +187,12 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
             return maxC >= minC && maxC > 0;
         } catch (NumberFormatException e) {
             return false;
+        }
+    }
+
+    public void onRemove() {
+        if(network != null) {
+            network.removeDirector(this);
         }
     }
 
@@ -246,6 +257,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         }
     }
 
+
     public String getMaterialString() {
         switch (material) {
             case 0:
@@ -279,7 +291,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("targetPos", targetPos);
         setChanged();
         int[] array = new int[3];
-        boolean result = tryLong(targetPos, array);
+        boolean result = StringToInt.posFromString(targetPos, array);
         if(result) {
             tPos = array;
             return true;
@@ -294,53 +306,6 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         } else {
             return Component.translatable("block.cbc_ballistics.ballistic_calculator.indirect");
         }
-    }
-
-
-    private static boolean tryLong(String string, int[] array) {
-        for(int i = 0; i <= 2; i ++) {
-            boolean pass = false;
-            boolean found = false;
-            int index = 0;
-            for (int j = 0; j < string.length(); j++) {
-                try {
-                    Integer.valueOf(string.substring(j, j + 1));
-                    if(!found) {
-                        index = j;
-                        found = true;
-                    }
-                } catch (NumberFormatException e) {
-                    if (found) {
-                        try {
-                            array[i] = Integer.parseInt(string.substring(index, j));
-                        } catch (NumberFormatException e1) {
-                            return false;
-                        }
-                        string = string.substring(j);
-                        pass = true;
-                        break;
-                    } else {
-                        if (string.charAt(j) == '-') {
-                            index = j;
-                            found = true;
-                        }
-                    }
-                }
-            }
-            if(!pass) {
-                if(found) {
-                    try {
-                        array[i] = Integer.parseInt(string.substring(index));
-                        string = "";
-                    } catch (NumberFormatException e) {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            }
-        }
-        return string.isEmpty();
     }
 
     @Override
@@ -388,5 +353,38 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
             tooltip.add(Component.translatable("block.cbc_ballistics.ballistic_calculator.tooltip.need_results"));
         }
         return IHaveGoggleInformation.super.addToGoggleTooltip(tooltip, isPlayerSneaking);
+    }
+
+
+    @Override
+    public void setTarget(int[] target) {
+        getPersistentData().putString("targetPos", ("X = " + target[0] + ", Y =" + target[1] + ", Z = " + target[2]));
+        setChanged();
+        tPos = target;
+    }
+
+    @Override
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public ArtilleryCoordinatorBlockEntity getNetwork() {
+        return network;
+    }
+
+    @Override
+    public void setNetwork(ArtilleryCoordinatorBlockEntity network) {
+        this.network = network;
+    }
+
+    @Override
+    public BlockEntity getBlockEntity() {
+        return this;
     }
 }
