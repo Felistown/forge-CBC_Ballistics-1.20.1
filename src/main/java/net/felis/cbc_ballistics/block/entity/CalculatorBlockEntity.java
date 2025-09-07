@@ -1,9 +1,15 @@
 package net.felis.cbc_ballistics.block.entity;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import net.felis.cbc_ballistics.block.ModBlocks;
+import net.felis.cbc_ballistics.networking.ModMessages;
+import net.felis.cbc_ballistics.networking.packet.SendReadyCannonsS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
+import net.felis.cbc_ballistics.networking.packet.SyncCalculatorS2CPacket;
 import net.felis.cbc_ballistics.screen.custom.Ballistic_CalculatorScreen;
-import net.felis.cbc_ballistics.util.StringToInt;
+import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
+import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
 import net.felis.cbc_ballistics.util.calculator.Cannon;
 import net.felis.cbc_ballistics.util.calculator.Projectile;
 import net.felis.cbc_ballistics.util.calculator.Target;
@@ -16,6 +22,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -54,6 +63,8 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     private ArtilleryCoordinatorBlockEntity network;
     private int id;
 
+    private byte redstonePulse;
+
 
     public CalculatorBlockEntity( BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.CALCULATORBLOCKENTITY.get(), pPos, pBlockState);
@@ -62,6 +73,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         calculate = false;
         isDirectFire = false;
         ready = false;
+        redstonePulse = -1;
         CompoundTag pTag = getPersistentData();
         pTag.putString("cannonPos", "");
         pTag.putString("targetPos", "");
@@ -93,11 +105,15 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         try {
             results = myCannon.interpolateTarget(minC, maxC);
             tooFar = false;
-            screen.setAllowPress();
+            if(screen != null) {
+                screen.setAllowPress();
+            }
             return true;
         } catch (RuntimeException e) {
             tooFar = true;
-            screen.setAllowPress();
+            if(screen != null) {
+                screen.setAllowPress();
+            }
             return false;
         }
     }
@@ -159,7 +175,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("cannonPos", cannonPos);
         setChanged();
         int[] array = new int[3];
-        boolean result = StringToInt.posFromString(cannonPos, array);
+        boolean result = Utils.posFromString(cannonPos, array);
         if(result) {
             cPos = array;
             return true;
@@ -291,7 +307,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("targetPos", targetPos);
         setChanged();
         int[] array = new int[3];
-        boolean result = StringToInt.posFromString(targetPos, array);
+        boolean result = Utils.posFromString(targetPos, array);
         if(result) {
             tPos = array;
             return true;
@@ -327,9 +343,30 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         setLength(pTag.getString("length"));
         setGravity(pTag.getString("gravity"));
         setDrag(pTag.getString("drag"));
-        setMaxPitch(pTag.getString("maxPitch"));
-        setMinPitch(pTag.getString("minPitch"));
+        setMaxCharge(pTag.getString("maxCharge"));
+        setMinCharge(pTag.getString("minCharge"));
     }
+
+    public void sync() {
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ()->
+                ModMessages.sendToServer(new SyncCalculatorC2SPacket(getBlockPos(), getPersistentData()))
+        );
+    }
+
+    public void syncFrom(CompoundTag pTag) {
+        material = pTag.getInt("material");
+        setCannonPos(pTag.getString("cannonPos"));
+        setTargetPos(pTag.getString("targetPos"));
+        setMinPitch(pTag.getString("minPitch"));
+        setMaxPitch(pTag.getString("maxPitch"));
+        setLength(pTag.getString("length"));
+        setGravity(pTag.getString("gravity"));
+        setDrag(pTag.getString("drag"));
+        setMaxCharge(pTag.getString("maxCharge"));
+        setMinCharge(pTag.getString("minCharge"));
+    }
+
+
 
     @Override
     public CompoundTag getUpdateTag() {
@@ -361,6 +398,12 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("targetPos", ("X = " + target[0] + ", Y =" + target[1] + ", Z = " + target[2]));
         setChanged();
         tPos = target;
+        calculate(null);
+        if(level != null && !level.isClientSide) {
+            //DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> ()->
+                    ModMessages.sendToPlayersRad(new SyncCalculatorS2CPacket(getBlockPos(), target), Utils.targetPoint(getBlockPos(), 160, level.dimension()));
+            //);
+        }
     }
 
     @Override
@@ -387,4 +430,92 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     public BlockEntity getBlockEntity() {
         return this;
     }
+
+    @Override
+    public void target() {
+        if(results != null) {
+            Projectile projectile = getResult();
+            for(Layer c: network.getLayers(this)) {
+                c.setTarget((float) projectile.getPitch(), (float) projectile.getTarget().getYaw());
+            }
+            redstonePulse = 8;
+        }
+    }
+
+    public void tick() {
+        redstonePulse();
+    }
+
+    private void redstonePulse() {
+        if(redstonePulse == 0) {
+            redstonePulse = -1;
+            level.updateNeighborsAt(getBlockPos(), ModBlocks.BALLISTIC_CALCULATOR.get());
+        } else if(redstonePulse > 0) {
+            redstonePulse --;
+            level.updateNeighborsAt(getBlockPos(), ModBlocks.BALLISTIC_CALCULATOR.get());
+        }
+    }
+
+    public int getRedstoneOutput() {
+        if (redstonePulse < 1) {
+            return 0;
+        } else if(results != null) {
+            return getResult().getCharges();
+        }
+        return 0;
+    }
+
+    @Override
+    public void mode(int mode) {
+        /*
+        0 = indirect
+        1 = direct
+        2 = best precision
+        3 = best dispersion
+        */
+        switch (mode) {
+            case 0:
+                isDirectFire = false;
+                break;
+            case 1:
+                isDirectFire = true;
+                break;
+            case 2:
+                if(results != null) {
+                    Projectile direct = results[0];
+                    Projectile indirect = results[1];
+                    isDirectFire = !(direct.getPrecisionEstimate() < indirect.getPrecisionEstimate());
+                }
+                break;
+            case 3:
+                if(results != null) {
+                    Projectile direct1 = results[0];
+                    Projectile indirect1 = results[1];
+                    isDirectFire = !(direct1.getDispersion() < indirect1.getDispersion());
+                }
+                break;
+        }
+    }
+
+
+    public boolean isSet() {
+        if(results != null) {
+            Projectile result = getResult();
+            float pitch = (float) result.getPitch();
+            float yaw = (float) result.getTarget().getYaw();
+            for (Layer l : network.getLayers(this)) {
+                if (l instanceof CannonControllerBlockEntity c) {
+                    if(c.getTargetYaw() != yaw || c.getTargetPitch() != pitch) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+
+
+
+
 }

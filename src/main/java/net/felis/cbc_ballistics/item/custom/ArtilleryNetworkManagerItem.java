@@ -1,10 +1,11 @@
 package net.felis.cbc_ballistics.item.custom;
 
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
+import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.IHaveData;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -34,23 +35,45 @@ public class ArtilleryNetworkManagerItem extends Item implements IHaveData {
             BlockEntity block = pContext.getLevel().getBlockEntity(pContext.getClickedPos());
             if (block != null) {
                 if(block instanceof ArtilleryCoordinatorBlockEntity) {
-                    selected = null;
-                    network = (ArtilleryCoordinatorBlockEntity) block;
+                    ArtilleryCoordinatorBlockEntity be = (ArtilleryCoordinatorBlockEntity) block;
+                    if(network == null) {
+                        selected = null;
+                        network = (ArtilleryCoordinatorBlockEntity) block;
+                    } else if(!network.partOfNetwork(be)){
+                        if(Utils.distFrom(network, be) < 50) {
+                            network.superiorOf(be);
+                            network.setChanged();
+                            network = be;
+                            network.setChanged();
+                        } else {
+                            System.out.println("too far");
+                        }
+                    }
                 } else if(block instanceof Director) {
                     Director director = (Director) block;
                     if (director.getNetwork() != null) {
                         network = director.getNetwork();
                         selected = director;
                     } else if(network != null) {
-                        network.addDirector(director);
-                        selected = director;
+                        if(Utils.distFrom(network, block) < 50) {
+                            network.addDirector(director);
+                            network.setChanged();
+                            selected = director;
+                        } else {
+                            System.out.println("too far");
+                        }
                     }
                 } else if(block instanceof Layer) {
                     Layer layer = (Layer) block;
                     if (layer.getNetwork() != null) {
                         network = layer.getNetwork();
                     } else if(network != null && selected != null) {
-                        network.addCannon(layer, selected);
+                        if(Utils.distFrom(network, block) < 50) {
+                            network.addCannon(layer, selected);
+                            network.setChanged();;
+                        } else {
+                            System.out.println("too far");
+                        }
                     }
                 }
             } else {
@@ -80,7 +103,7 @@ public class ArtilleryNetworkManagerItem extends Item implements IHaveData {
     @Override
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
         if(network != null) {
-            network.appendForTooltip(pTooltipComponents);
+            network.appendForTooltip(pTooltipComponents, Screen.hasShiftDown());
         } else {
             pTooltipComponents.add(Component.translatable("item.cbc_ballistics.network_manager.no_network"));
         }

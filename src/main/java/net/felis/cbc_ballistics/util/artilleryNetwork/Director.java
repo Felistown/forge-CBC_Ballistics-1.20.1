@@ -17,5 +17,8 @@ public interface Director {
 
     public BlockEntity getBlockEntity();
 
+    public void target();
+
+    public void mode(int mode);
 
 }

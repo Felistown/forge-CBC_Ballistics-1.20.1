@@ -429,14 +429,14 @@ public class Ballistic_CalculatorScreen extends Screen {
     public void onClose() {
         block.setCannonPos(cannonPos.getValue());
         block.setTargetPos(targetPos.getValue());
-        block.setMinPitch(minPitch.getValue());
-        block.setMaxPitch(maxPitch.getValue());
+        block.setMinCharge(minCharge.getValue());
+        block.setMaxCharge(maxCharge.getValue());
         block.setLength(length.getValue());
         block.setGravity(grav.getValue());
         block.setDrag(drag.getValue());
         block.setMaxPitch(maxPitch.getValue());
         block.setMinPitch(minPitch.getValue());
-        ModMessages.sendToServer(new SyncCalculatorC2SPacket(block.getBlockPos(), block.getPersistentData()));
+        block.sync();
         super.onClose();
     }
 

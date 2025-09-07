@@ -27,6 +27,8 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 
 import java.util.function.Supplier;
 
+import static com.simibubi.create.foundation.data.TagGen.axeOrPickaxe;
+
 public class ModBlocks {
     public static final CreateRegistrate REGISTRATE = CBC_Ballistics.REGISTRATE;
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, CBC_Ballistics.MODID);

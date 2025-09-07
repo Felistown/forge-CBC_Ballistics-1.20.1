@@ -2,16 +2,20 @@ package net.felis.cbc_ballistics.block.entity;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rbasamoyai.createbigcannons.cannon_control.cannon_mount.CannonMountBlockEntity;
 import rbasamoyai.createbigcannons.cannon_control.contraption.AbstractMountedCannonContraption;
 import rbasamoyai.createbigcannons.cannon_control.contraption.PitchOrientedContraptionEntity;
@@ -19,10 +23,9 @@ import rbasamoyai.createbigcannons.cannon_control.contraption.PitchOrientedContr
 
 public class CannonControllerBlockEntity extends KineticBlockEntity implements  IHaveGoggleInformation, Layer {
 
+    private static final Logger log = LoggerFactory.getLogger(CannonControllerBlockEntity.class);
     private float targetPitch;
     private float targetYaw;
-    private float newPitch;
-    private float newYaw;
     private CannonMountBlockEntity cannon;
     private boolean active;
     private boolean setting;
@@ -33,8 +36,6 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
 
     public CannonControllerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
-        newPitch = 0f;
-        newYaw = 0f;
         fire = false;
     }
 
@@ -55,8 +56,6 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
         }
         active = false;
         setting = false;
-        newPitch = 0f;
-        newYaw = 0f;
         fire = false;
     }
 
@@ -89,20 +88,20 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
 
                     float speed = Math.abs(getTheoreticalSpeed() * 0.04f);
                     boolean changed = false;
-
-                    if (mount.pitch != -targetPitch) {
+                    float pitch = mount.pitch * Math.signum(mount.getInitialOrientation().getStepX() -   mount.getInitialOrientation().getStepZ());
+                    if (pitch != targetPitch) {
                         changed = true;
-                        float pDiff = Math.abs(targetPitch + mount.pitch);
+                        float pDiff = Math.abs(targetPitch - pitch);
                         if (pDiff > speed) {
                             float movement;
-                            if (-mount.pitch > targetPitch) {
+                            if (pitch > targetPitch) {
                                 movement = -speed;
                             } else {
                                 movement = speed;
                             }
-                            newPitch = -mount.pitch + movement;
+                            cannon.setPitch(pitch + movement);
                         } else {
-                            newPitch = targetPitch;
+                            cannon.setPitch(targetPitch);
                         }
                     }
 
@@ -110,24 +109,24 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
                         changed = true;
                         float yaw = (mount.yaw + 360) % 360;
                         float tYaw = (targetYaw + 360) % 360;
-                        float yDiff = Math.abs(tYaw - yaw);
-                        if (yDiff > speed) {
+                        float yDiff = tYaw - yaw;
+                        if (Math.abs(yDiff) > speed) {
+                            yDiff = (yDiff + 180) % 360 - 180;
                             float movement;
-                            if (tYaw < yaw) {
-                                movement = -speed;
-                            } else {
+                            if (yDiff > 0) {
                                 movement = speed;
+                            } else  {
+                                movement = -speed;
                             }
-                            newYaw = yaw + movement;
+                            cannon.setYaw(mount.yaw + movement);
                         } else {
-                            newYaw = targetYaw;
+                            cannon.setYaw(targetYaw);
                         }
                     }
                     if (changed) {
-                        update();
+                        cannon.notifyUpdate();
                     } else {
                         setting = false;
-                        fire();
                     }
                 }
                 return;
@@ -141,22 +140,10 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
         return false;
     }
 
-    private void update() {
-        if(!overStressed) {
-            cannon.setPitch(newPitch);
-            cannon.setYaw(newYaw);
-            cannon.notifyUpdate();
-        }
-    }
-
     private void updateNetwork(boolean active) {
         if(active == this.active) {
             if (getOrCreateNetwork() != null) {
                 stress += getAddedStress();
-                if(level != null && level.isClientSide) {
-                    System.out.println("from upnet");
-                    System.out.println(capacity);
-                }
                 getOrCreateNetwork().updateStressFor(this, getAddedStress());
             }
             this.active = !active;
@@ -190,8 +177,6 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
 
     public void setTarget(float pitch, float yaw) {
         setting = true;
-        newPitch = 0f;
-        newYaw = 0f;
         this.targetYaw = yaw;
         this.targetPitch = pitch;
     }
@@ -268,54 +253,6 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
     }
 
     @Override
-    protected void write(CompoundTag compound, boolean clientPacket) {
-        super.write(compound, clientPacket);
-        compound.putBoolean("setting", setting);
-        compound.putFloat("yaw", targetYaw);
-        compound.putFloat("pitch", targetPitch);
-        compound.putBoolean("active", active);
-        CompoundTag tag = getPersistentData();
-        tag.putBoolean("setting", setting);
-        tag.putFloat("yaw", targetYaw);
-        tag.putFloat("pitch", targetPitch);
-        tag.putBoolean("active", active);
-        if(director != null) {
-            BlockPos senderPos =  director.getBlockEntity().getBlockPos();
-            int[] senderCords = {senderPos.getX(), senderPos.getY(), senderPos.getZ()};
-            compound.putIntArray("senderPos", senderCords);
-            tag.putIntArray("senderPos", senderCords);
-        }
-    }
-
-    @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
-        write(tag, false);
-        return super.getUpdateTag();
-    }
-
-
-    @Override
-    protected void read(CompoundTag compound, boolean clientPacket) {
-        super.read(compound, clientPacket);
-            setting = compound.getBoolean("setting");
-            targetYaw = compound.getFloat("yaw");
-            targetPitch =  compound.getFloat("pitch");
-            active = compound.getBoolean("active");
-            int[] blockCords = compound.getIntArray("senderPos");
-            if(level != null) {
-                cannon = findCannon(level);
-                if (blockCords.length >= 3) {
-                    BlockPos pos = new BlockPos(blockCords[0], blockCords[1], blockCords[2]);
-                    BlockEntity sender = level.getBlockEntity(pos);
-                    if (sender instanceof Director) {
-                        this.director = (Director) sender;
-                    }
-                }
-            }
-    }
-
-    @Override
     public void onLoad() {
         if(cannon == null && level != null && !level.isClientSide) {
             cannon = findCannon(level);
@@ -323,4 +260,31 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
         read(getPersistentData(), false);
         super.onLoad();
     }
+
+    public float getTargetPitch() {
+        return targetPitch;
+    }
+
+    public float getTargetYaw() {
+        return targetYaw;
+    }
+
+    public float getCannonPitch() {
+        if(cannon != null && cannon.getCannonMount() != null) {
+            return cannon.getContraption().pitch;
+        }
+        return 0f;
+    }
+
+    public float getCannonYaw() {
+        if (cannon != null) {
+            if (cannon.getCannonMount() != null) {
+                return cannon.getContraption().yaw;
+            }
+            Direction facing = cannon.getBlockState().getValue(HorizontalDirectionalBlock.FACING);
+            return (float) Utils.yawFromFacing(facing);
+        }
+        return 0f;
+    }
+
 }

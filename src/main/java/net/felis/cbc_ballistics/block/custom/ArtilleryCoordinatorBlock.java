@@ -4,8 +4,11 @@ import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
 import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.screen.ClientHooks;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -14,6 +17,8 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
@@ -63,11 +68,19 @@ public class ArtilleryCoordinatorBlock extends BaseEntityBlock {
 
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (pLevel.isClientSide()) {
+        if(pHand == InteractionHand.MAIN_HAND) {
             BlockEntity entity = pLevel.getBlockEntity(pPos);
-            if (entity instanceof ArtilleryCoordinatorBlockEntity && pHand == InteractionHand.MAIN_HAND) {
-                //DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientHooks.openBallisticCalculatorScreen(pPos));
-                return InteractionResult.SUCCESS;
+            if (entity instanceof ArtilleryCoordinatorBlockEntity block) {
+                if (pLevel.isClientSide) {
+                    ItemStack item = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+                    if (item.getItem() == ModItems.RANGEFINDER.get() && item.getTag() != null) {
+                        block.setTargetPos(item.getTag().getString("results"));
+                    }
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientHooks.openArtilleryCoordinatorScreen(pPos));
+                    return InteractionResult.SUCCESS;
+                } else {
+                    block.syncToClient(pPlayer);
+                }
             }
         }
         return InteractionResult.sidedSuccess(pLevel.isClientSide());
@@ -76,4 +89,10 @@ public class ArtilleryCoordinatorBlock extends BaseEntityBlock {
     static {
         FACING = HorizontalDirectionalBlock.FACING;
     }
+
+    @Override
+    public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState, BlockEntityType<T> pBlockEntityType) {
+        return pLevel.isClientSide() ? null : (level, pos, state, type) -> ((ArtilleryCoordinatorBlockEntity)type).tick();
+    }
+
 }

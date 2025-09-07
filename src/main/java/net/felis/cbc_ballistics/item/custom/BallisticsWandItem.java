@@ -53,7 +53,7 @@ public class BallisticsWandItem extends Item implements IHaveData {
                 if (isCheck) {
                     pContext.getItemInHand().setTag(block.getPersistentData().copy());
                 } else {
-                    if (block instanceof CalculatorBlockEntity) {
+                    if (block instanceof CalculatorBlockEntity && !pContext.getLevel().isClientSide) {
                         block = Minecraft.getInstance().player.level().getBlockEntity(pContext.getClickedPos());
                         if (((CalculatorBlockEntity) block).getResult() != null) {
                             Projectile results = ((CalculatorBlockEntity) block).getResult();
