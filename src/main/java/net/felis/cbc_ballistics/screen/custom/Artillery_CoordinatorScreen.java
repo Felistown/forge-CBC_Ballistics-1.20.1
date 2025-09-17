@@ -42,6 +42,8 @@ public class Artillery_CoordinatorScreen extends Screen {
     private static final Component DISP = Component.translatable("block.cbc_ballistics.ballistic_calculator.dispersion");
     private static final Component BLOCKS = Component.translatable("block.cbc_ballistics.ballistic_calculator.blocks");
     private static final Component SECONDS = Component.translatable("block.cbc_ballistics.ballistic_calculator.seconds");
+    private static final Component SUPER = Component.translatable("unit.cbc_ballistics.artillery_network.super_short");
+    private static final Component SUB = Component.translatable("unit.cbc_ballistics.artillery_network.sub_short");
 
     private int ticks;
 
@@ -174,6 +176,14 @@ public class Artillery_CoordinatorScreen extends Screen {
         pGuiGraphics.drawString(FONT, DISP.getString() + disp + BLOCKS.getString(), leftBound + 98, topBound + 46, 16777215, false);
         double tTT = Math.round((block.getMedianTTT()/ 20) * 1000) / 1000.0;
         pGuiGraphics.drawString(FONT, TTT.getString() + tTT + SECONDS.getString(), leftBound + 98, topBound + 54, 16777215, false);
+
+        pGuiGraphics.drawString(FONT, SUPER, leftBound + 8, topBound + 86, 16777215, false);
+        ArtilleryCoordinatorBlockEntity be = block.getSuperior();
+        if(be != null && be.getNetwork_id() != null) {
+            pGuiGraphics.drawString(FONT, be.getNetwork_id(), leftBound + 8, topBound + 94, 16777215, false);
+        }
+        pGuiGraphics.drawString(FONT, SUB, leftBound + 98, topBound + 86, 16777215, false);
+        pGuiGraphics.drawString(FONT, "" + block.getSuboridinates().size(), leftBound + 98, topBound + 94, 16777215, false);
     }
 
 

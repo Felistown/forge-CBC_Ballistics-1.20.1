@@ -1,9 +1,10 @@
 package net.felis.cbc_ballistics.util.artilleryNetwork;
 
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public interface Director {
+public interface Director extends NetworkComponent {
 
     public void setTarget(int[] target);
 
@@ -21,4 +22,5 @@ public interface Director {
 
     public void mode(int mode);
 
+    public void removeNetwork();
 }

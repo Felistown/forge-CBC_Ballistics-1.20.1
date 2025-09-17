@@ -4,9 +4,11 @@ import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import net.felis.cbc_ballistics.block.ModBlocks;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.SendReadyCannonsS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.SyncArtilleryNetComponentC2SPacket;
 import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
 import net.felis.cbc_ballistics.networking.packet.SyncCalculatorS2CPacket;
 import net.felis.cbc_ballistics.screen.custom.Ballistic_CalculatorScreen;
+import net.felis.cbc_ballistics.util.ParticleHelper;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
@@ -20,6 +22,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
@@ -66,7 +69,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     private byte redstonePulse;
 
 
-    public CalculatorBlockEntity( BlockPos pPos, BlockState pBlockState) {
+    public CalculatorBlockEntity(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.CALCULATORBLOCKENTITY.get(), pPos, pBlockState);
         cPos = new int[3];
         tPos = new int[3];
@@ -88,7 +91,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         material = 3;
         minP = -30;
         maxP = 60;
-        grav =  0.05;
+        grav = 0.05;
         drg = 0.99;
         minC = 1;
         maxC = 1;
@@ -96,22 +99,22 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public boolean calculate(Ballistic_CalculatorScreen screen) {
-        Cannon myCannon = new Cannon(cPos[0] , cPos[1], cPos[2], len, minP, maxP, getMaterialString());
+        Cannon myCannon = new Cannon(cPos[0], cPos[1], cPos[2], len, minP, maxP, getMaterialString());
         myCannon.setDrag(drg);
         myCannon.setGravity(grav);
-        Target myTarget = new Target( tPos[0], tPos[1], tPos[2], myCannon);
+        Target myTarget = new Target(tPos[0], tPos[1], tPos[2], myCannon);
         myCannon.setTarget(myTarget);
         ready = true;
         try {
             results = myCannon.interpolateTarget(minC, maxC);
             tooFar = false;
-            if(screen != null) {
+            if (screen != null) {
                 screen.setAllowPress();
             }
             return true;
         } catch (RuntimeException e) {
             tooFar = true;
-            if(screen != null) {
+            if (screen != null) {
                 screen.setAllowPress();
             }
             return false;
@@ -123,7 +126,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public Projectile getResult() {
-        if(results != null) {
+        if (results != null) {
             if (isDirectFire) {
                 return results[0];
             } else {
@@ -176,7 +179,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         setChanged();
         int[] array = new int[3];
         boolean result = Utils.posFromString(cannonPos, array);
-        if(result) {
+        if (result) {
             cPos = array;
             return true;
         } else {
@@ -207,7 +210,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public void onRemove() {
-        if(network != null) {
+        if (network != null) {
             network.removeDirector(this);
         }
     }
@@ -250,8 +253,8 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public void cycleMaterial() {
-        material ++;
-        if(material > 4) {
+        material++;
+        if (material > 4) {
             material = 0;
         }
         getPersistentData().putInt("material", material);
@@ -308,7 +311,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         setChanged();
         int[] array = new int[3];
         boolean result = Utils.posFromString(targetPos, array);
-        if(result) {
+        if (result) {
             tPos = array;
             return true;
         } else {
@@ -317,7 +320,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public Component getMode() {
-        if(isDirectFire) {
+        if (isDirectFire) {
             return Component.translatable("block.cbc_ballistics.ballistic_calculator.direct");
         } else {
             return Component.translatable("block.cbc_ballistics.ballistic_calculator.indirect");
@@ -348,7 +351,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public void sync() {
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ()->
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
                 ModMessages.sendToServer(new SyncCalculatorC2SPacket(getBlockPos(), getPersistentData()))
         );
     }
@@ -367,7 +370,6 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
 
-
     @Override
     public CompoundTag getUpdateTag() {
         CompoundTag tag = super.getUpdateTag();
@@ -378,9 +380,9 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         tooltip.add(Component.literal("    ").append(Component.translatable("block.cbc_ballistics.ballistic_calculator")));
-        if(tooFar) {
+        if (tooFar) {
             tooltip.add(OUT_OF_RANGE);
-        } else if(results != null){
+        } else if (results != null) {
             double yaw = Math.round(getResult().getTarget().getYaw() * 1000) / 1000.0;
             double pitch = Math.round(getResult().getPitch() * 1000) / 1000.0;
             tooltip.add(PITCH.copy().append("" + pitch));
@@ -399,9 +401,9 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         setChanged();
         tPos = target;
         calculate(null);
-        if(level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide) {
             //DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> ()->
-                    ModMessages.sendToPlayersRad(new SyncCalculatorS2CPacket(getBlockPos(), target), Utils.targetPoint(getBlockPos(), 160, level.dimension()));
+            ModMessages.sendToPlayersRad(new SyncCalculatorS2CPacket(getBlockPos(), target), Utils.targetPoint(getBlockPos(), 160, level.dimension()));
             //);
         }
     }
@@ -433,9 +435,9 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
 
     @Override
     public void target() {
-        if(results != null) {
+        if (results != null) {
             Projectile projectile = getResult();
-            for(Layer c: network.getLayers(this)) {
+            for (Layer c : network.getLayers(this)) {
                 c.setTarget((float) projectile.getPitch(), (float) projectile.getTarget().getYaw());
             }
             redstonePulse = 8;
@@ -447,11 +449,11 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     private void redstonePulse() {
-        if(redstonePulse == 0) {
+        if (redstonePulse == 0) {
             redstonePulse = -1;
             level.updateNeighborsAt(getBlockPos(), ModBlocks.BALLISTIC_CALCULATOR.get());
-        } else if(redstonePulse > 0) {
-            redstonePulse --;
+        } else if (redstonePulse > 0) {
+            redstonePulse--;
             level.updateNeighborsAt(getBlockPos(), ModBlocks.BALLISTIC_CALCULATOR.get());
         }
     }
@@ -459,7 +461,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     public int getRedstoneOutput() {
         if (redstonePulse < 1) {
             return 0;
-        } else if(results != null) {
+        } else if (results != null) {
             return getResult().getCharges();
         }
         return 0;
@@ -481,14 +483,14 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
                 isDirectFire = true;
                 break;
             case 2:
-                if(results != null) {
+                if (results != null) {
                     Projectile direct = results[0];
                     Projectile indirect = results[1];
                     isDirectFire = !(direct.getPrecisionEstimate() < indirect.getPrecisionEstimate());
                 }
                 break;
             case 3:
-                if(results != null) {
+                if (results != null) {
                     Projectile direct1 = results[0];
                     Projectile indirect1 = results[1];
                     isDirectFire = !(direct1.getDispersion() < indirect1.getDispersion());
@@ -497,15 +499,22 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         }
     }
 
+    @Override
+    public void removeNetwork() {
+        if (network != null) {
+            network.removeDirector(this);
+        }
+    }
+
 
     public boolean isSet() {
-        if(results != null) {
+        if (results != null) {
             Projectile result = getResult();
             float pitch = (float) result.getPitch();
             float yaw = (float) result.getTarget().getYaw();
             for (Layer l : network.getLayers(this)) {
                 if (l instanceof CannonControllerBlockEntity c) {
-                    if(c.getTargetYaw() != yaw || c.getTargetPitch() != pitch) {
+                    if (c.getTargetYaw() != yaw || c.getTargetPitch() != pitch) {
                         return false;
                     }
                 }
@@ -514,8 +523,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         return true;
     }
 
-
-
-
-
 }
+
+
+

@@ -66,5 +66,7 @@
   "block.cbc_ballistics.artillery_network.fire": "Fire",
   "block.cbc_ballistics.artillery_network.pres": "Precise",
   "block.cbc_ballistics.artillery_network.dis": "Accurate",
-  "block.cbc_ballistics.artillery_network.median": "Medians"
+  "block.cbc_ballistics.artillery_network.median": "Medians",
+  "unit.cbc_ballistics.artillery_network.super_short": "Subnet of:",
+  "unit.cbc_ballistics.artillery_network.sub_short": "Subnets = "
 }

@@ -2,6 +2,8 @@ package net.felis.cbc_ballistics.block.entity;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import net.felis.cbc_ballistics.networking.ModMessages;
+import net.felis.cbc_ballistics.networking.packet.SyncArtilleryNetComponentC2SPacket;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
@@ -286,5 +288,13 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
         }
         return 0f;
     }
+
+    @Override
+    public void removeNetwork() {
+        if(network != null) {
+            network.removeCannon(this);
+        }
+    }
+
 
 }

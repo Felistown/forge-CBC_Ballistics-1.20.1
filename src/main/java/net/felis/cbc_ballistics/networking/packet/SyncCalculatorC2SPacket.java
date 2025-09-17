@@ -3,12 +3,15 @@ package net.felis.cbc_ballistics.networking.packet;
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
 import net.felis.cbc_ballistics.entity.custom.RangefinderEntity;
 import net.felis.cbc_ballistics.item.ModItems;
+import net.felis.cbc_ballistics.item.custom.ArtilleryNetworkManagerItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -45,6 +48,7 @@ public class SyncCalculatorC2SPacket {
             if(blockS instanceof CalculatorBlockEntity block) {
                 block.syncFrom(tags);
             }
+
         });
         return true;
     }

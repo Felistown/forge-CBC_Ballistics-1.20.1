@@ -1,14 +1,13 @@
 package net.felis.cbc_ballistics.block.custom;
 
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
-import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
 import net.felis.cbc_ballistics.item.ModItems;
+import net.felis.cbc_ballistics.networking.ModMessages;
+import net.felis.cbc_ballistics.networking.packet.SyncArtilleryNetS2CPacket;
 import net.felis.cbc_ballistics.screen.ClientHooks;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -69,6 +68,7 @@ public class ArtilleryCoordinatorBlock extends BaseEntityBlock {
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if(pHand == InteractionHand.MAIN_HAND) {
+            System.out.println("Interacted with -----------------------");
             BlockEntity entity = pLevel.getBlockEntity(pPos);
             if (entity instanceof ArtilleryCoordinatorBlockEntity block) {
                 if (pLevel.isClientSide) {
@@ -79,7 +79,12 @@ public class ArtilleryCoordinatorBlock extends BaseEntityBlock {
                     DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientHooks.openArtilleryCoordinatorScreen(pPos));
                     return InteractionResult.SUCCESS;
                 } else {
-                    block.syncToClient(pPlayer);
+                    ArtilleryCoordinatorBlockEntity sup = block.getSuperior();
+                    if(sup != null) {
+                        sup.syncToClient(pPlayer);
+                    } else {
+                        block.syncToClient(pPlayer);
+                    }
                 }
             }
         }

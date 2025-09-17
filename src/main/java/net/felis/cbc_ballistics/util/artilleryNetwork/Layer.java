@@ -3,7 +3,7 @@ package net.felis.cbc_ballistics.util.artilleryNetwork;
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public interface Layer {
+public interface Layer extends NetworkComponent {
 
     public void setDirector(Director director);
 
@@ -20,4 +20,6 @@ public interface Layer {
     public boolean isSet();
 
     public void fire();
+
+    public void removeNetwork();
 }

@@ -49,7 +49,6 @@ public class SendArtilleryNetworkInstructionC2SPacket {
             BlockEntity blockS = level.getBlockEntity(pos);
             if(blockS instanceof ArtilleryCoordinatorBlockEntity) {
                 ArtilleryCoordinatorBlockEntity block = (ArtilleryCoordinatorBlockEntity) blockS;
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                     switch (instruction) {
                         case 0:
                             block.setTarget(value);
@@ -64,7 +63,6 @@ public class SendArtilleryNetworkInstructionC2SPacket {
                             block.fire();
                             break;
                     }
-                });
             }
 
         });

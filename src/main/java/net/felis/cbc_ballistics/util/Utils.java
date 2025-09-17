@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
@@ -74,6 +75,10 @@ public class Utils {
         return new int[]{pos.getX(), pos.getY(), pos.getZ()};
     }
 
+    public static double[] vec3ToArray(Vec3 pos) {
+        return new double[]{pos.x, pos.y, pos.z};
+    }
+
     public static BlockPos arrayToBlockPos(int[] array) {
         return new BlockPos(array[0], array[1], array[2]);
     }
@@ -141,6 +146,10 @@ public class Utils {
             case WEST -> 90;
             default -> 0;
         };
+    }
+
+    public static double angle(float o, float a) {
+        return Math.atan(o / a);
     }
 
 }
