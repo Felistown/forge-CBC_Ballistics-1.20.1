@@ -1,6 +1,5 @@
 package net.felis.cbc_ballistics.block.custom;
 
-import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
 import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.screen.ClientHooks;

@@ -4,8 +4,6 @@ import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.networking.ClientHandler;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;

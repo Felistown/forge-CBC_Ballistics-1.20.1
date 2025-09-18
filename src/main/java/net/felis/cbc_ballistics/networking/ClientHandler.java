@@ -2,24 +2,17 @@ package net.felis.cbc_ballistics.networking;
 
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
-import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.item.custom.ArtilleryNetworkManagerItem;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
-import net.felis.cbc_ballistics.util.artilleryNetwork.NetworkComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import java.util.Set;
 
 public class ClientHandler {
 
@@ -37,10 +30,6 @@ public class ClientHandler {
         Level level = player.level();
         BlockEntity blockS = level.getBlockEntity(pos);
         if (blockS instanceof ArtilleryCoordinatorBlockEntity block) {
-            Set<String> keys = tags.getAllKeys();
-            for(String key: keys) {
-                System.out.println(key);
-            }
             block.reconnectNetwork(tags);
         }
     }

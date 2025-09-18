@@ -3,12 +3,9 @@ package net.felis.cbc_ballistics.block.entity;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import net.felis.cbc_ballistics.block.ModBlocks;
 import net.felis.cbc_ballistics.networking.ModMessages;
-import net.felis.cbc_ballistics.networking.packet.SendReadyCannonsS2CPacket;
-import net.felis.cbc_ballistics.networking.packet.SyncArtilleryNetComponentC2SPacket;
 import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
 import net.felis.cbc_ballistics.networking.packet.SyncCalculatorS2CPacket;
 import net.felis.cbc_ballistics.screen.custom.Ballistic_CalculatorScreen;
-import net.felis.cbc_ballistics.util.ParticleHelper;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
@@ -22,12 +19,10 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -403,7 +398,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         calculate(null);
         if (level != null && !level.isClientSide) {
             //DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> ()->
-            ModMessages.sendToPlayersRad(new SyncCalculatorS2CPacket(getBlockPos(), target), Utils.targetPoint(getBlockPos(), 160, level.dimension()));
+            ModMessages.sendToPlayersRad(new SyncCalculatorS2CPacket(getBlockPos(), target), Utils.targetPoint(getBlockPos(), 200, level.dimension()));
             //);
         }
     }

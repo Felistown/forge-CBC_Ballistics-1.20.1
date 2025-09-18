@@ -58,21 +58,6 @@ public class ModMessages {
                 .encoder(removeNetworkS2CPacket::toBytes)
                 .consumerMainThread(removeNetworkS2CPacket::handle)
                 .add();
-        INSTANCE.messageBuilder(SyncArtilleryNetComponentC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SyncArtilleryNetComponentC2SPacket::new)
-                .encoder(SyncArtilleryNetComponentC2SPacket::toBytes)
-                .consumerMainThread(SyncArtilleryNetComponentC2SPacket::handle)
-                .add();
-        INSTANCE.messageBuilder(RequestArtilleryNetDataC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(RequestArtilleryNetDataC2SPacket::new)
-                .encoder(RequestArtilleryNetDataC2SPacket::toBytes)
-                .consumerMainThread(RequestArtilleryNetDataC2SPacket::handle)
-                .add();
-        INSTANCE.messageBuilder(SyncArtilleryNetC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SyncArtilleryNetC2SPacket::new)
-                .encoder(SyncArtilleryNetC2SPacket::toBytes)
-                .consumerMainThread(SyncArtilleryNetC2SPacket::handle)
-                .add();
         INSTANCE.messageBuilder(SyncArtilleryNetS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(SyncArtilleryNetS2CPacket::new)
                 .encoder(SyncArtilleryNetS2CPacket::toBytes)

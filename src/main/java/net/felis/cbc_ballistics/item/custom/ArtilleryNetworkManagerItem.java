@@ -4,6 +4,7 @@ import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.SyncManagerItemS2CPacket;
 import net.felis.cbc_ballistics.util.IHaveData;
+import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
 import net.felis.cbc_ballistics.util.artilleryNetwork.NetworkComponent;
@@ -23,6 +24,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import org.jetbrains.annotations.Nullable;
+import oshi.jna.platform.linux.LinuxLibc;
 
 import java.util.List;
 
@@ -42,7 +44,6 @@ public class ArtilleryNetworkManagerItem extends Item implements IHaveData {
         Level level = pContext.getLevel();
         if(pContext.getHand() == InteractionHand.MAIN_HAND && !level.isClientSide) {
             Player player = pContext.getPlayer();
-            System.out.println("Client side = " + level.isClientSide);
             BlockEntity be = level.getBlockEntity(pContext.getClickedPos());
             if(be instanceof NetworkComponent c) {
                 if (network == null) {
@@ -73,7 +74,6 @@ public class ArtilleryNetworkManagerItem extends Item implements IHaveData {
                     }
                 }
                 if(network != null) {
-                    System.out.println("Sync for client side item = " + level.isClientSide);
                     network.safeSyncToClient(pContext.getPlayer());
                 }
                 syncToClient(player);
@@ -96,16 +96,13 @@ public class ArtilleryNetworkManagerItem extends Item implements IHaveData {
     }
 
     private void connect(NetworkComponent c) {
-        if(c instanceof ArtilleryCoordinatorBlockEntity n && !n.getSuboridinates().contains(network)) {
-            System.out.println("put superior");
+        if(c instanceof ArtilleryCoordinatorBlockEntity n && !n.getSuboridinates().contains(network) && Utils.distFrom(n, network) <= 100) {
             network.superiorOf(n);
         } else if(c.getNetwork() == null) {
-            if(c instanceof Director d) {
-                System.out.println("put director");
+            if(c instanceof Director d  && Utils.distFrom(d.getBlockEntity(), network) <= 50) {
                 network.addDirector(d);
                 selected = d;
-            } else if (selected != null && c instanceof Layer l) {
-                System.out.println("put layer");
+            } else if (selected != null && c instanceof Layer l && Utils.distFrom(l.getBlockEntity(), selected.getBlockEntity()) <= 25) {
                 network.addCannon(l, selected);
             }
         }
@@ -116,10 +113,8 @@ public class ArtilleryNetworkManagerItem extends Item implements IHaveData {
             network.removeNetwork(n);
         } else if(c.getNetwork() == network) {
             if (c instanceof Director d && selected == d) {
-                System.out.println("removed director");
                 network.removeDirector(d);
             } else if (c instanceof Layer l) {
-                System.out.println("removed layer");
                 network.removeCannon(l);
             }
         }

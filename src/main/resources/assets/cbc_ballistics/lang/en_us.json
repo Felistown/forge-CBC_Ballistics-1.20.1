@@ -1,7 +1,7 @@
 {
   "item.cbc_ballistics.rangefinder" : "Rangefinder",
   "item.cbc_ballistics.ballistics_wand" : "Ballistics debug wand",
-  "item.cbc_ballistics.network_manager": "Artillery network manager",
+  "item.cbc_ballistics.network_manager": "Artillery Network Manager",
   "block.cbc_ballistics.ballistic_calculator": "Ballistic Calculator",
   "block.cbc_ballistics.cannon_control": "Cannon controller",
   "block.cbc_ballistics.ballistic_calculator.cannonPos": "Cannon X, Y and Z",
@@ -49,7 +49,7 @@
   "item.cbc_ballistics.network_manager.no_selected": "No director selected",
   "item.cbc_ballistics.network_manager.no_network": "Tune to network to use",
   "item.cbc_ballistics.network_manager_item": "Network manager",
-  "block.cbc_ballistics.artillery_coordinator": "Artillery coordinator",
+  "block.cbc_ballistics.artillery_coordinator": "Artillery Coordinator",
   "block.cbc_ballistics.artillery_coordinator.part": "Part of network: ",
   "block.cbc_ballistics.artillery_coordinator.sub": "Subnetworks: ",
   "block.cbc_ballistics.artillery_coordinator.cannon": "    ↳ cannon ",

@@ -24,6 +24,7 @@ import net.minecraftforge.fml.DistExecutor;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Set;
 
 public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements NetworkComponent {
@@ -72,6 +73,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
 
     public void removeSubordinate(ArtilleryCoordinatorBlockEntity block) {
         suboridinates.remove(block);
+        setChanged();
     }
 
     public ArrayList<ArtilleryCoordinatorBlockEntity> getSuboridinates() {
@@ -83,11 +85,13 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         if(!suboridinates.contains(be)) {
             suboridinates.add(be);
         }
+        setChanged();
     }
 
 
     protected void setSuperior(ArtilleryCoordinatorBlockEntity block) {
         this.superior = block;
+        setChanged();
     }
 
     public ArtilleryCoordinatorBlockEntity getSuperior() {
@@ -96,11 +100,13 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
 
     protected void removeSuborinate(ArtilleryCoordinatorBlockEntity block) {
         suboridinates.remove(block);
+        setChanged();
     }
 
     public void removeSuperior() {
         superior.removeSuborinate(this);
         superior = null;
+        setChanged();
     }
 
     @Override
@@ -202,6 +208,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
             cannons.add(cannon);
             cannon.setDirector(director);
             cannon.setNetwork(this);
+            setChanged();
         }
     }
 
@@ -210,15 +217,16 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
             director.setId(uniqueDirectorId());
             director.setNetwork(this);
             directors.add(director);
+            setChanged();
         }
     }
 
     public void addDirector(Director director, int id) {
-        System.out.println("Added director from method");
         if(!directors.contains(director)) {
             director.setId(id);
             director.setNetwork(this);
             directors.add(director);
+            setChanged();
         }
     }
 
@@ -233,7 +241,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
     }
 
     public void removeDirector(Director director) {
-        System.out.println("Removed director");
         for(Layer i: getLayers(director)) {
             i.setNetwork(null);
             cannons.remove(i);
@@ -243,11 +250,13 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         directors.remove(director);
         safeSyncToClients();
         removeNet(director.getBlockEntity().getBlockPos());
+        setChanged();
     }
 
     private void removeNet(BlockPos pos) {
         if(level != null && !level.isClientSide) {
-            ModMessages.sendToPlayersRad(new removeNetworkS2CPacket(pos), Utils.targetPoint(pos, 160, level.dimension()));
+            ModMessages.sendToPlayersRad(new removeNetworkS2CPacket(pos), Utils.targetPoint(pos, 200, level.dimension()));
+            setChanged();
         }
     }
 
@@ -256,6 +265,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         cannons.remove(cannon);
         safeSyncToClients();
         removeNet(cannon.getBlockEntity().getBlockPos());
+        setChanged();
     }
 
     public String getNetwork_id() {
@@ -300,7 +310,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         if(num != prevReady) {
             if(level != null) {
                 int num0 = num;
-                ModMessages.sendToPlayersRad(new SendReadyCannonsS2CPacket(getBlockPos(), num0), Utils.targetPoint(getBlockPos(), 160, level.dimension()));
+                ModMessages.sendToPlayersRad(new SendReadyCannonsS2CPacket(getBlockPos(), num0), Utils.targetPoint(getBlockPos(), 200, level.dimension()));
             }
         }
         prevReady = num;
@@ -406,10 +416,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
 
     @Override
     protected void saveAdditional(CompoundTag pTag) {
-        try {
-            System.out.println("number of directors = " + directors.size());
-            System.out.println("saving additional");
-            System.out.println("client side = " + level.isClientSide);
             if (network_id != null) {
                 pTag.putString("network_id", network_id);
             }
@@ -418,7 +424,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
                 BlockPos dPos = d.getBlockEntity().getBlockPos();
                 int[] dPosArray = {dPos.getX(), dPos.getY(), dPos.getZ(), d.getId()};
                 pTag.putIntArray("d" + d.getId(), dPosArray);
-                System.out.println("Director put in");
                 for (Layer l : getLayers(d)) {
                     BlockPos lPos = l.getBlockEntity().getBlockPos();
                     int[] lPosArray = {lPos.getX(), lPos.getY(), lPos.getZ(), d.getId()};
@@ -433,9 +438,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
                 BlockPos pos = suboridinates.get(i).getBlockPos();
                 pTag.putIntArray("s" + i, Utils.blockPosToArray(pos));
             }
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
         super.saveAdditional(pTag);
     }
 
@@ -450,39 +452,26 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
     }
 
     public void reconnectNetwork(CompoundTag pTag) {
-        System.out.println("reconnecting network");
-        Set<String> keyas = pTag.getAllKeys();
-        for(String key: keyas) {
-            System.out.println(key);
-        }
-        System.out.println("Finished all read keys __________________");
-        try {
             removeAllData();
             network_id = pTag.getString("network_id");
             if (network_id.isEmpty()) {
                 network_id = uniqueNetworkId();
             }
             if (level != null) {
-                System.out.println("Connecting netowrks on a non null level");
                 Set<String> keys = Set.copyOf(pTag.getAllKeys());
                 for (String key : keys) {
-                    System.out.println(key);
                     if (key.charAt(0) == 'd') {
-                        System.out.println("This is a director");
                         int[] data = pTag.getIntArray(key);
                         BlockPos pos = new BlockPos(data[0], data[1], data[2]);
                         BlockEntity be = level.getBlockEntity(pos);
                         if (be instanceof Director) {
-                            System.out.println("added director");
                             addDirector((Director) be, data[3]);
                         } else {
-                            System.out.println("Failed to add director");
                         }
                     } else if (key.charAt(0) == 'u') {
                         int[] data = pTag.getIntArray(key);
                         BlockEntity be = level.getBlockEntity(Utils.arrayToBlockPos(data));
                         if (be instanceof ArtilleryCoordinatorBlockEntity) {
-                            System.out.println("Yes it it");
                             ((ArtilleryCoordinatorBlockEntity) be).superiorOf(this);
                         }
                     } else if (key.charAt(0) == 's') {
@@ -503,12 +492,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
                         }
                     }
                 }
-            } else {
-                System.out.println("null level");
             }
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
     }
 
     public void removeAllData() {
@@ -552,7 +536,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
     public void onLoad() {
         if (saveData != null) {
             reconnectNetwork(saveData);
-            setChanged();
         }
         if (network_id == null || network_id.isEmpty()) {
             network_id = uniqueNetworkId();
@@ -582,7 +565,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
     }
 
     public void syncToClients() {
-        ModMessages.sendToPlayersRad(new SyncArtilleryNetS2CPacket(getBlockPos(), getSaveData()), Utils.targetPoint(getBlockPos(), 160, level.dimension()));
+        ModMessages.sendToPlayersRad(new SyncArtilleryNetS2CPacket(getBlockPos(), getSaveData()), Utils.targetPoint(getBlockPos(), 200, level.dimension()));
         for (ArtilleryCoordinatorBlockEntity be : suboridinates) {
             be.syncToClients();
         }
@@ -646,30 +629,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         return changedTarget;
     }
 
-    public ArrayList<ArtilleryCoordinatorBlockEntity> allInSystem() {
-        ArrayList<ArtilleryCoordinatorBlockEntity> ret = new ArrayList<ArtilleryCoordinatorBlockEntity>();
-        topHierarchy().allInSystem(ret);
-        return ret;
-    }
-
-    protected ArrayList<ArtilleryCoordinatorBlockEntity> allInSystem(ArrayList<ArtilleryCoordinatorBlockEntity> array) {
-        if(superior != null) {
-            array.add(superior);
-        }
-        if(suboridinates.isEmpty()) {
-            array.add(this);
-        } else {
-            for(ArtilleryCoordinatorBlockEntity be: suboridinates) {
-                be.allInSystem(array);
-            }
-        }
-        return array;
-    }
-
-    public boolean partOfNetwork(ArtilleryCoordinatorBlockEntity be) {
-        return allInSystem().contains(be);
-    }
-
     public static ArtilleryCoordinatorBlockEntity fromId(String id) {
         for(ArtilleryCoordinatorBlockEntity be: networks) {
             if(be.getNetwork_id().equals(id)) {
@@ -680,22 +639,24 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
     }
 
     public void line(Level level, boolean isCentre) {
-        if(level != null && level.isClientSide) {
-            if(superior != null && isCentre) {
-                ParticleHelper.line(level, getBlockPos(), superior.getBlockPos(), ParticleHelper.Colour.YELLOW);
-            }
-            for (ArtilleryCoordinatorBlockEntity be : suboridinates) {
-                ParticleHelper.line(level, getBlockPos(), be.getBlockPos(), ParticleHelper.Colour.WHITE);
-                be.line(level, false);
-            }
-            for (Director d: directors) {
-                BlockPos pos = d.getBlockEntity().getBlockPos();
-                ParticleHelper.line(level, getBlockPos(), pos, ParticleHelper.Colour.BLUE);
-                for(Layer l: getLayers(d)) {
-                    ParticleHelper.line(level, pos, l.getBlockEntity().getBlockPos(), ParticleHelper.Colour.GREEN);
+        try {
+            if (level != null && level.isClientSide) {
+                if (superior != null && isCentre) {
+                    ParticleHelper.line(level, getBlockPos(), superior.getBlockPos(), ParticleHelper.Colour.YELLOW);
+                }
+                for (ArtilleryCoordinatorBlockEntity be : suboridinates) {
+                    ParticleHelper.line(level, getBlockPos(), be.getBlockPos(), ParticleHelper.Colour.WHITE);
+                    be.line(level, false);
+                }
+                for (Director d : directors) {
+                    BlockPos pos = d.getBlockEntity().getBlockPos();
+                    ParticleHelper.line(level, getBlockPos(), pos, ParticleHelper.Colour.BLUE);
+                    for (Layer l : getLayers(d)) {
+                        ParticleHelper.line(level, pos, l.getBlockEntity().getBlockPos(), ParticleHelper.Colour.GREEN);
+                    }
                 }
             }
-        }
+        } catch (ConcurrentModificationException ignored) {}
     }
 
     @Override

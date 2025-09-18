@@ -49,8 +49,6 @@ public class CBC_Ballistics
 
         ModItems.register(modEventBus);
 
-        ModBlocks.register(modEventBus);
-
         ModBlockEntities.register(modEventBus);
 
         ModEntities.register(modEventBus);

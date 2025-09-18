@@ -147,9 +147,4 @@ public class Utils {
             default -> 0;
         };
     }
-
-    public static double angle(float o, float a) {
-        return Math.atan(o / a);
-    }
-
 }

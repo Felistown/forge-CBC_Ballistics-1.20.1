@@ -2,8 +2,6 @@ package net.felis.cbc_ballistics.block.entity;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import net.felis.cbc_ballistics.networking.ModMessages;
-import net.felis.cbc_ballistics.networking.packet.SyncArtilleryNetComponentC2SPacket;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
@@ -113,7 +111,6 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
                         float tYaw = (targetYaw + 360) % 360;
                         float yDiff = tYaw - yaw;
                         if (Math.abs(yDiff) > speed) {
-                            yDiff = (yDiff + 180) % 360 - 180;
                             float movement;
                             if (yDiff > 0) {
                                 movement = speed;
@@ -206,7 +203,6 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
         }
         return false;
     }
-
 
     @Override
     public float calculateStressApplied() {

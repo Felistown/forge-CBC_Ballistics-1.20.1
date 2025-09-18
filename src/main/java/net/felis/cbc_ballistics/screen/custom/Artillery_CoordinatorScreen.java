@@ -254,8 +254,8 @@ public class Artillery_CoordinatorScreen extends Screen {
         if(modeCooldown <= 0 && !targetError) {
             modeCooldown = 5;
             block.changeMode();
-            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(block.getBlockPos(), (byte) 2,"" + block.getMode()));
             send(null);
+            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(block.getBlockPos(), (byte) 2,"" + block.getMode()));
         }
     }
 

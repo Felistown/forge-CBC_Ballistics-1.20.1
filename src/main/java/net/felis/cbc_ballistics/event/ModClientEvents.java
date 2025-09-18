@@ -5,18 +5,20 @@ import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.RangefindC2SPacket;
 import net.felis.cbc_ballistics.util.IHaveData;
-import net.felis.cbc_ballistics.util.KeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
-import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -83,14 +85,15 @@ public class ModClientEvents {
     public static class ClientForgeEvents {
 
         @SubscribeEvent
-        public static void onKeyRegister(RegisterKeyMappingsEvent event) {
-            event.register(KeyBinding.RANGEFINDING_KEY);
-        }
-
-        @SubscribeEvent
         public static void onKeyInput(InputEvent.MouseButton event) {
-            if(KeyBinding.RANGEFINDING_KEY.consumeClick() && Minecraft.getInstance().player.getUseItem().getItem() == ModItems.RANGEFINDER.get() && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
-                ModMessages.sendToServer(new RangefindC2SPacket());
+            Player player = Minecraft.getInstance().player;
+            if(player != null && player.level().isClientSide) {
+                ItemStack stack = player.getUseItem();
+                int button = event.getButton();
+                int action = event.getAction();
+                if (button == 0 && action == 1 && player.isUsingItem() && stack.getItem() == ModItems.RANGEFINDER.get() && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
+                    ModMessages.sendToServer(new RangefindC2SPacket());
+                }
             }
         }
     }

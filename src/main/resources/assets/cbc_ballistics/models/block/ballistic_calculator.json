@@ -3,6 +3,7 @@
   "textures": {
     "front": "cbc_ballistics:block/ballistic_calculator",
     "side": "cbc_ballistics:block/cbc_casing",
-    "top": "cbc_ballistics:block/cbc_casing"
+    "top": "cbc_ballistics:block/cbc_casing",
+    "particle": "cbc_ballistics:block/cbc_casing"
   }
 }
