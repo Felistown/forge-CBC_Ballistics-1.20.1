@@ -1,8 +1,9 @@
 package net.felis.cbc_ballistics.block.entity;
 
 import com.simibubi.create.AllPartialModels;
-import com.simibubi.create.content.kinetics.base.OrientedRotatingVisual;
 import com.simibubi.create.content.kinetics.base.ShaftRenderer;
+import com.simibubi.create.content.kinetics.base.SingleRotatingInstance;
+import com.simibubi.create.content.kinetics.transmission.SplitShaftInstance;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
 import net.felis.cbc_ballistics.CBC_Ballistics;
@@ -24,10 +25,11 @@ public class ModBlockEntities {
 
     public static final BlockEntityEntry<CannonControllerBlockEntity> CANNON_CONTROLLER_BLOCK_ENTITY = REGISTRATE
             .blockEntity("cannon_control_block_entity", CannonControllerBlockEntity::new)
-            .visual(() -> {return OrientedRotatingVisual.of(AllPartialModels.SHAFT_HALF);}, false)
             .renderer(() -> ShaftRenderer::new)
+
             .validBlock(ModBlocks.CANNON_CONTROL)
             .register();
+    //.visual(() -> {return OrientedRotatingVisual.of(AllPartialModels.SHAFT_HALF);}, false)
 
     public static final RegistryObject<BlockEntityType<ArtilleryCoordinatorBlockEntity>> ARTILLERY_COORDINATOR_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("artillery_coordinator_block_entity", () -> BlockEntityType.Builder.of(ArtilleryCoordinatorBlockEntity::new, ModBlocks.ARTILLERY_COORDINATOR.get()).build(null));

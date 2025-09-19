@@ -17,6 +17,7 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 
 
 public class ModBlocks {
+
     public static final CreateRegistrate REGISTRATE = CBC_Ballistics.REGISTRATE;
 
     public static final RegistryEntry<CalculatorBlock> BALLISTIC_CALCULATOR = REGISTRATE

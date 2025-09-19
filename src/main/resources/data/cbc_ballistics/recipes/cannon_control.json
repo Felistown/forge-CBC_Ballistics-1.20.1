@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "T": {
-      "item": "create:transmitter"
+    "L": {
+      "item": "minecraft:lightning_rod"
     },
     "R": {
       "item": "create:redstone_contact"
@@ -25,7 +25,7 @@
     }
   },
   "pattern": [
-    "RTS",
+    "RLS",
     "SPG",
     "ABA"
   ],
