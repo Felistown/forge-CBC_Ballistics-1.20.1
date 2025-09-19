@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "T": {
-      "item": "create:transmitter"
+    "L": {
+      "item": "minecraft:lightning_rod"
     },
     "C": {
       "item": "create:clipboard"
@@ -13,7 +13,7 @@
     }
   },
   "pattern": [
-    " T ",
+    " L ",
     " C ",
     " A "
   ],

@@ -1,6 +1,7 @@
 package net.felis.cbc_ballistics.block.entity;
 
-import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
@@ -21,7 +22,7 @@ import rbasamoyai.createbigcannons.cannon_control.contraption.AbstractMountedCan
 import rbasamoyai.createbigcannons.cannon_control.contraption.PitchOrientedContraptionEntity;
 
 
-public class CannonControllerBlockEntity extends KineticBlockEntity implements  IHaveGoggleInformation, Layer {
+public class CannonControllerBlockEntity extends KineticBlockEntity implements IHaveGoggleInformation, Layer {
 
     private static final Logger log = LoggerFactory.getLogger(CannonControllerBlockEntity.class);
     private float targetPitch;

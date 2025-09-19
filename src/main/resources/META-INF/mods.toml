@@ -73,7 +73,7 @@ issueTrackerURL = "https://github.com/Felistown/CBC-Ballistics/issues"
 [[dependencies.cbc_ballistics]]
   modId = "create"
  mandatory = true
- versionRange = "[6.0.0,)"
+ versionRange = "0.5.1"
  ordering = "NONE"
   side = "BOTH"
 

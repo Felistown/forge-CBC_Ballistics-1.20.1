@@ -1,6 +1,6 @@
 package net.felis.cbc_ballistics.block.entity;
 
-import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import net.felis.cbc_ballistics.block.ModBlocks;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
