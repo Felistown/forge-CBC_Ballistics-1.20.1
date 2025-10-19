@@ -1,47 +1,58 @@
 package net.felis.cbc_ballistics.util.calculator;
 
+import net.felis.cbc_ballistics.entity.custom.DetectingProjectile;
+import net.felis.cbc_ballistics.util.Utils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
+
 public class Projectile {
     private final Cannon cannon;
     private final double pitch;
     private final int power;
     private final double delta;
     private final double timeToTarget;
+    private float angle_of_attack;
 
-    private double[] coordinates = new double[2];
-    private double[] velocity = new double[2];
-    private double totalDistanceTravelled;
+    private double[] pos = new double[2];
+    private double[] vel = new double[2];
 
-    private final Target target;
-    private boolean simulated;
-    private double precision;
+    private HitResult result;
+    private double distanceTravelled;
 
     //Constructor methods
     public Projectile(Cannon cannon, double pitch, int charges) {
         this.cannon = cannon;
         this.pitch = pitch;
         power = charges * 2;
-        simulated = false;
+        double pitchRadians = Math.toRadians(pitch);
 
-        coordinates[0] = cannon.getBarrelLength() * Math.cos(pitchRadians());
-        coordinates[1] = cannon.getY() + Math.sin(pitchRadians()) * cannon.getBarrelLength();
+        BlockPos cannonPos = cannon.getCannonPos();
+        pos[0] = cannon.getBarrelLength() * Math.cos(pitchRadians);
+        pos[1] = cannonPos.getY() + Math.sin(pitchRadians) * cannon.getBarrelLength();
 
-        velocity[0] = Math.cos(pitchRadians()) * power;
-        velocity[1] = Math.sin(pitchRadians()) * power;
+        vel[0] = Math.cos(pitchRadians) * power;
+        vel[1] = Math.sin(pitchRadians) * power;
 
-        target = cannon.getTarget();
-
-        timeToTarget = Math.abs(Math.log(1 - (target.getDistance() - coordinates[0]) / (100 * velocity[0])) / Math.log(0.99));
+        timeToTarget = Math.abs(Math.log(1 - (cannon.distToTarget() - pos[0]) / (100 * vel[0])) / Math.log(0.99));
         double[] airTimes = getAirTimes();
         double deltaA = Math.abs(timeToTarget - airTimes[0]);
         double deltaB = Math.abs(timeToTarget - airTimes[1]);
         delta = Math.min(deltaA, deltaB);
     }
 
+
+
     //mutator methods
 
     //accessor methods
     public Cannon getCannon() {
         return cannon;
+    }
+
+    public float getYaw() {
+        return cannon.getYaw();
     }
 
     public double getPitch() {
@@ -64,10 +75,6 @@ public class Projectile {
         return timeToTarget + delta;
     }
 
-    public Target getTarget() {
-        return target;
-    }
-
     public double getPrecisionEstimate() {
         Double precisionEstimate = new Double(1 - delta / getAirtime());
         if(precisionEstimate.isNaN()) {
@@ -77,121 +84,56 @@ public class Projectile {
         }
     }
 
-    public double getGravity() {
-        return cannon.getGravity();
-    }
-
-    public double getDrag() {
-        return cannon.getDrag();
-    }
-
-    public double getTotalDistanceTravelled() {
-        return totalDistanceTravelled;
-    }
-
     public double getDispersion() {
-        if(!simulated) {
-            precision = simulate();
-            simulated = true;
-        }
-        double minDispersion;
-        double spreadReductionPerBarrel;
-        switch (cannon.getMaterial().toLowerCase()) {
-            case "steel":
-                minDispersion = 0.025;
-                spreadReductionPerBarrel = 1.4;
-                break;
-            case "nethersteel":
-                minDispersion = 0.02;
-                spreadReductionPerBarrel = 1.15;
-                break;
-            case "castiron":
-                minDispersion = 0.05;
-                spreadReductionPerBarrel = 2;
-                break;
-            case "wroughtiron":
-                minDispersion = 0.1;
-                spreadReductionPerBarrel = 1;
-                break;
-            case "bronze":
-                minDispersion = 0.03;
-                spreadReductionPerBarrel = 1.4;
-                break;
-            default:
-                throw new RuntimeException("invalid material");
-        };
-        double dispersion = Math.max(power * 2 - spreadReductionPerBarrel * cannon.getBarrelLength(), minDispersion);
-        double angle = Math.atan((0.0172275 * dispersion) / power);
-        return totalDistanceTravelled * Math.sin(angle);
+        Material material = cannon.getMaterial();
+        double inaccuracy = Math.max(power - material.reduction * cannon.getBarrelLength(), material.minDisp);
+        return 0.0172275 * inaccuracy * distanceTravelled;
+    }
+
+    public HitResult simulate() {
+        Vec3 cPos  = cannon.getCannonPos().getCenter();
+        float yaw = cannon.getYaw();
+        Vector3f tipPos = Utils.vecToVel(-(float)pitch , yaw, cannon.getBarrelLength() + 0.5f);
+        tipPos.add((float)cPos.x, (float)cPos.y, (float)cPos.z);
+        DetectingProjectile d = new DetectingProjectile.Detect(cannon.getLevel(), new Vec3(tipPos))
+                .grav(cannon.getGravity())
+                .drag(cannon.getDrag())
+                .allowHitEntity(false)
+                .range(1000000)
+                .simulate(-(float)pitch , yaw, power);
+        result = d.getResults();
+        angle_of_attack = d.getAngle_of_attack();
+        distanceTravelled = d.getDistTravelled();
+        return result;
+    }
+
+    public float getAngleOfAttack() {
+        return angle_of_attack;
+    }
+
+    public double getDistanceTravelled() {
+        return distanceTravelled;
     }
 
     public double getPrecision() {
-        if (!simulated) {
-            precision = simulate();
-            simulated = true;
-        }
-        return precision;
-    }
-
-    private double simulate() {
-        double xCoordinate = coordinates[0];
-        double yCoordinate = coordinates[1];
-        double xVelocity = velocity[0];
-        double yVelocity = velocity[1];
-        boolean isHitFloor = false;
-        if(yCoordinate <= target.getY()) {
-            while (yCoordinate + yVelocity <= target.getY()) {
-                if(xCoordinate + xVelocity > target.getDistance()) {
-                    break;
-                }
-                totalDistanceTravelled += Math.sqrt(xVelocity * xVelocity + yVelocity * yVelocity);
-                xCoordinate += xVelocity;
-                xVelocity *= cannon.getDrag();
-                yCoordinate += yVelocity;
-                yVelocity = cannon.getDrag() * yVelocity - cannon.getGravity();
-            }
-        }
-        while (xCoordinate + xVelocity <= target.getDistance()) {
-            if(yCoordinate + yVelocity <= target.getY()) {
-                isHitFloor = true;
-                break;
-            }
-            totalDistanceTravelled += Math.sqrt(xVelocity * xVelocity + yVelocity * yVelocity);
-            xCoordinate += xVelocity;
-            xVelocity *= cannon.getDrag();
-            yCoordinate += yVelocity;
-            yVelocity = cannon.getDrag() * yVelocity - cannon.getGravity();
-        }
-        if(isHitFloor) {
-            double finalPitch = Math.atan(xVelocity / yVelocity);
-            double yDisplacement = target.getY() - yCoordinate;
-            double xDisplacement = Math.tan(finalPitch) * yDisplacement;
-            xCoordinate += xDisplacement;
-            totalDistanceTravelled += Math.sqrt(yDisplacement * yDisplacement+ xDisplacement * xDisplacement);
-            return Math.abs(cannon.getDistance() - xCoordinate);
+        if(result != null) {
+            BlockPos cPos = cannon.getTarget();
+            return Utils.distFrom(result.getLocation(), new Vec3(cPos.getX(), cPos.getY(), cPos.getZ()));
         } else {
-            double finalPitch = Math.atan(yVelocity / xVelocity);
-            double xDisplacement = target.getDistance() - xCoordinate;
-            double yDisplacement = Math.tan(finalPitch) * xDisplacement;
-            yCoordinate += yDisplacement;
-            totalDistanceTravelled += Math.sqrt(yDisplacement * yDisplacement+ xDisplacement * xDisplacement);
-            return Math.abs(target.getY() - yCoordinate);
+            return Double.MAX_VALUE;
         }
     }
 
     public String toString() {
-        return "Pitch = " + getPitch() + ", precision = " + simulate() + ", Charges = " + getCharges() + ", traveltime = " + getAirtime() / 20 + ", dispersion = " + getDispersion();
+        return "Pitch = " + getPitch() + ", precision = " + getPrecision() + ", Charges = " + getCharges() + ", traveltime = " + getAirtime() / 20 + ", dispersion = " + getDispersion();
     }
 
     //helper methods
 
-    private double pitchRadians() {
-        return Math.toRadians(pitch);
-    }
-
     private double[] getAirTimes() {
-        double yCoordinate = coordinates[1];
-        double yVelocity = velocity[1];
+        BlockPos target = cannon.getTarget();
+        double yCoordinate = pos[1];
+        double yVelocity = vel[1];
         double airTime0 = 0;
         double airTime1 = 999999999;
         if(yCoordinate <= target.getY()) {

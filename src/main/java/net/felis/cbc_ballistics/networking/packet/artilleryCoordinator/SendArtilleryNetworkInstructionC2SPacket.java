@@ -1,4 +1,4 @@
-package net.felis.cbc_ballistics.networking.packet;
+package net.felis.cbc_ballistics.networking.packet.artilleryCoordinator;
 
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.util.Utils;
@@ -24,6 +24,7 @@ public class SendArtilleryNetworkInstructionC2SPacket {
     private BlockPos pos;
 
     public SendArtilleryNetworkInstructionC2SPacket(BlockPos pos, byte instruction, String value) {
+        System.out.println("sent instruction");
         this.pos = pos;
         this.instruction = instruction;
         this.value = value;
@@ -55,7 +56,7 @@ public class SendArtilleryNetworkInstructionC2SPacket {
                             block.target();
                             break;
                         case 2:
-                            block.setMode(Utils.stringToInt(value));
+                            block.setMode(ArtilleryCoordinatorBlockEntity.Mode.fromByte((byte)Utils.stringToInt(value)));
                             break;
                         case 3:
                             block.fire();

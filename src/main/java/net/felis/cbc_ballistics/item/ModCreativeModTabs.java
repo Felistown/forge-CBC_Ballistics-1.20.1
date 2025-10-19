@@ -2,6 +2,7 @@ package net.felis.cbc_ballistics.item;
 
 import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.block.ModBlocks;
+import net.felis.cbc_ballistics.item.custom.RadioItem;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -19,6 +20,7 @@ public class ModCreativeModTabs {
             .title(Component.translatable("creativetab.ballistics"))
             .displayItems((itemDisplayParameters, output) -> {
                 output.accept(ModItems.RANGEFINDER.get());
+                output.accept(ModItems.RADIO.get());
                 output.accept(ModItems.MANAGER.get());
                 output.accept(ModBlocks.ARTILLERY_COORDINATOR.get());
                 output.accept(ModBlocks.BALLISTIC_CALCULATOR.get());

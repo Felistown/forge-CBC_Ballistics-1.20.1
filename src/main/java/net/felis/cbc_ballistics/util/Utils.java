@@ -1,12 +1,17 @@
 package net.felis.cbc_ballistics.util;
 
+import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
+import net.felis.cbc_ballistics.util.calculator.Projectile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,6 +100,18 @@ public class Utils {
         return 0.0;
     }
 
+    public static float median(float[] array) {
+        if(array.length > 0) {
+            if(array.length > 1) {
+                Arrays.sort(array.clone());
+                return array[(int) Math.round(array.length / 2.0)];
+            } else {
+                return array[0];
+            }
+        }
+        return 0.0f;
+    }
+
     public static double[] toArray(ArrayList<Double> array) {
         double[] ret = new double[array.size()];
         for (int i = 0; i < array.size(); i++) {
@@ -111,14 +128,34 @@ public class Utils {
         return "X = " + pos.getX() + ", Y = " + pos.getY() + ", Z = " + pos.getZ();
     }
 
+    public static String formatPos(Vec3 pos) {
+        return "X = " + (int)Mth.floor(pos.x) + ", Y = " + (int)Mth.floor(pos.y) + ", Z = " + (int)Mth.floor(pos.z);
+    }
+
     public static PacketDistributor.TargetPoint targetPoint(BlockPos pos, int radius, ResourceKey<Level> dimension) {
         return new PacketDistributor.TargetPoint(pos.getX(), pos.getY(), pos.getZ(), radius, dimension);
     }
+
+    public static Vector3f vecToVel(float xRot, float yRot, float magnitude) {
+        float xVel = -Mth.sin(yRot * 0.017453292F) * Mth.cos(xRot* 0.017453292F);
+        float yVel = -Mth.sin(xRot * 0.017453292F);
+        float zVel = Mth.cos(yRot * 0.017453292F) * Mth.cos(xRot * 0.017453292F);
+        return new Vector3f(xVel * magnitude, yVel * magnitude, zVel * magnitude);
+    }
+
+
 
     public static double distFrom(BlockPos pos0, BlockPos pos1) {
         int x = pos0.getX() -  pos1.getX();
         int y = pos0.getY() - pos1.getY();
         int z = pos0.getZ() - pos1.getZ();
+        return Math.sqrt(x * x + y * y + z * z);
+    }
+
+    public static double distFrom(Vec3 pos0, Vec3 pos1) {
+        double x = pos0.x -  pos1.x;
+        double y = pos0.y - pos1.y;
+        double z = pos0.z - pos1.z;
         return Math.sqrt(x * x + y * y + z * z);
     }
 
@@ -136,6 +173,12 @@ public class Utils {
             }
         }
         return true;
+    }
+
+    public static CompoundTag tagOf(ArtilleryCoordinatorBlockEntity be) {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("network_id", be.getNetwork_id());
+        return tag;
     }
 
     public static int yawFromFacing(Direction d) {

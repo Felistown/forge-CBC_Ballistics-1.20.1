@@ -1,55 +1,42 @@
 package net.felis.cbc_ballistics.util.calculator;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+
 import java.util.ArrayList;
 
 public class Cannon {
-    private final double[] coordinates = new double[3];
-    private final int barrelLength;
-    private final double maxPitch;
-    private final double minPitch;
-    private final String material;
+    private BlockPos cannonPos;
+    private Level level;
+    private int barrelLength;
+    private float maxPitch;
+    private float minPitch;
+    private Material material;
+    private int maxCharge;
+    private int minCharge;
 
-    private Target target;
+    private float gravity;
+    private float drag;
 
-    private double gravity = 0.05;
-    private double drag = 0.99;
+    private BlockPos target;
 
     //Constructor methods
-    public Cannon(double x, double y, double z, int barrelLength, double minPitch, double maxPitch, String material) {
-        coordinates[0] = x;
-        coordinates[1] = y;
-        coordinates[2] = z;
+    private Cannon(BlockPos cannonPos, int barrelLength, float minPitch, float maxPitch, Material material, Level level, int minCharge, int maxCharge, float gravity, float drag) {
+        this.cannonPos = cannonPos;
+        this.level = level;
         this.barrelLength = barrelLength;
         this.minPitch = minPitch;
         this.maxPitch = maxPitch;
         this.material = material;
-
-        target = null;
-
-        gravity = 0.05;
-        drag = 0.99;
-    }
-
-    //mutator methods
-    public void setTarget(Target target) {
-        target.clear();
-        this.target = target;
-        target.setCannon(this);
-    }
-    public Projectile[] interpolateTarget(int charges) {
-        Projectile[] solutions = calculate(charges);
-        return new Projectile[]{calculate(solutions[0]), calculate(solutions[1])};
-    }
-
-    public void setGravity(double gravity) {
+        this.minCharge = minCharge;
+        this.maxCharge = maxCharge;
         this.gravity = gravity;
-    }
-
-    public void setDrag(double drag) {
         this.drag = drag;
     }
 
-    public Projectile[] interpolateTarget(int minCharge, int maxCharge) {
+    //mutator methods
+    public FiringSolutions interpolateTarget(BlockPos target) {
+        this.target = target;
         Projectile[] solutions = new Projectile[2];
         ArrayList<Projectile> lowerSolutions = new ArrayList<Projectile>();
         ArrayList<Projectile> upperSolutions = new ArrayList<Projectile>();
@@ -77,20 +64,36 @@ public class Cannon {
                 solutions[1] = upperSolutions.get(i);
             }
         }
-        return solutions;
+        return new FiringSolutions(solutions, getYaw());
     }
 
     //accessor methods
-    public double getX() {
-        return coordinates[0];
+    public BlockPos getCannonPos() {
+        return cannonPos;
     }
 
-    public double getY() {
-        return coordinates[1];
+    public Level getLevel() {
+        return level;
     }
 
-    public double getZ() {
-        return coordinates[2];
+    public float getYaw() {
+        double xDistance = cannonPos.getX() - target.getX();
+        float rawYaw = (float) (Math.atan((cannonPos.getZ() - target.getZ()) / xDistance) * (180 / Math.PI));
+        if(xDistance == 0) {
+            rawYaw = 0;
+        }
+        if(xDistance >= 0) {
+            rawYaw += 180;
+        }
+        return (rawYaw + 270) % 360;
+    }
+
+    public BlockPos getTarget() {
+        return target;
+    }
+
+    public double distToTarget() {
+        return Math.sqrt(Math.pow(cannonPos.getX() - target.getX(), 2) + Math.pow(cannonPos.getZ() - target.getZ(), 2));
     }
 
     public int getBarrelLength() {
@@ -105,28 +108,16 @@ public class Cannon {
         return maxPitch;
     }
 
-    public String getMaterial() {
+    public Material getMaterial() {
         return material;
     }
 
-    public Target getTarget() {
-        return target;
-    }
-
-    public double getGravity() {
+    public float getGravity() {
         return gravity;
     }
 
-    public double getDrag() {
+    public float getDrag() {
         return drag;
-    }
-
-    public double getYaw() {
-        return target.getYaw();
-    }
-
-    public double getDistance() {
-        return target.getDistance();
     }
 
     //helper methods
@@ -156,7 +147,6 @@ public class Cannon {
             ArrayList<Projectile> angles = new ArrayList<Projectile>();
             for(double pitch = lowerPitch; pitch <= upperPitch; pitch += iter) {
                 try {
-
                     Projectile newProjectile = new Projectile(this, pitch, charges);
                     angles.add(newProjectile);
                 } catch (RuntimeException e) {
@@ -189,5 +179,80 @@ public class Cannon {
             }
         }
         return array.get(array.size() - 1);
+    }
+
+    public static class Builder {
+        private BlockPos cannonPos;
+        private Level level;
+        private int barrelLength;
+        private float maxPitch;
+        private float minPitch;
+        private Material material;
+        private float gravity;
+        private float drag;
+        private int minCharge;
+        private int maxCharge;
+
+        public Builder(Level level) {
+            cannonPos = new BlockPos(0,0,0);
+            this.level = level;
+            barrelLength = 1;
+            material = Material.STEEL;
+            maxPitch = 60;
+            minPitch = -30;
+            minCharge = 1;
+            maxCharge = 1;
+            gravity = 0.05f;
+            drag = 0.99f;
+        }
+
+        public Builder at(BlockPos pos) {
+            cannonPos = pos;
+            return this;
+        }
+
+        public Builder length(int barrelLength) {
+            this.barrelLength = barrelLength;
+            return this;
+        }
+
+        public Builder material(Material material) {
+            this.material = material;
+            return this;
+        }
+
+        public Builder maxPitch(float maxPitch) {
+            this.maxPitch = maxPitch;
+            return this;
+        }
+
+        public Builder minPitch(float minPitch) {
+            this.minPitch = minPitch;
+            return this;
+        }
+
+        public Builder maxCharge(int maxCharge) {
+            this.maxCharge = maxCharge;
+            return this;
+        }
+
+        public Builder minCharge(int minCharge) {
+            this.minCharge = minCharge;
+            return this;
+        }
+
+        public Builder drag(float drag) {
+            this.drag = drag;
+            return this;
+        }
+
+        public Builder grav(float grav) {
+            gravity = grav;
+            return this;
+        }
+
+        public Cannon build() {
+            return new Cannon(cannonPos, barrelLength, minPitch, maxPitch, material, level, minCharge, maxCharge, gravity, drag);
+        }
     }
 }

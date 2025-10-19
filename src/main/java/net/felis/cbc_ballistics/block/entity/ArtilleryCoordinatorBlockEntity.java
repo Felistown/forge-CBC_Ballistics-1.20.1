@@ -1,15 +1,17 @@
 package net.felis.cbc_ballistics.block.entity;
 
 import net.felis.cbc_ballistics.networking.ModMessages;
-import net.felis.cbc_ballistics.networking.packet.SendReadyCannonsS2CPacket;
-import net.felis.cbc_ballistics.networking.packet.SyncArtilleryNetS2CPacket;
-import net.felis.cbc_ballistics.networking.packet.removeNetworkS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.OpenCoordinatorS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.SyncArtilleryNetS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.UpdateArtilleryNetDataS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.removeNetworkS2CPacket;
+import net.felis.cbc_ballistics.screen.Artillery_CoordinatorInterface;
 import net.felis.cbc_ballistics.util.ParticleHelper;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
 import net.felis.cbc_ballistics.util.artilleryNetwork.NetworkComponent;
-import net.felis.cbc_ballistics.util.calculator.Projectile;
+import net.felis.cbc_ballistics.util.calculator.FiringSolutions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -50,15 +52,8 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
     double medianDisp;
     double medianTTT;
 
-    private int mode;
+    private Mode mode;
     private int[] tPos;
-    private boolean changedTarget;
-    /*
-     0 = indirect
-     1 = direct
-     2 = best precision
-     3 = best dispersion
-     */
 
     private ArtilleryCoordinatorBlockEntity superior;
     private final ArrayList<ArtilleryCoordinatorBlockEntity> suboridinates = new ArrayList<ArtilleryCoordinatorBlockEntity>();
@@ -68,6 +63,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         medianPres = 0.0;
         medianDisp = 0.0;
         medianTTT = 0.0;
+        mode = Mode.INDIRECT;
     }
 
 
@@ -141,7 +137,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
 
     public void setTarget(String targetPos) {
         setTargetPos(targetPos);
-        changedTarget = false;
         if(tPos.length == 3) {
             for (Director d : directors) {
                 d.setTarget(tPos);
@@ -150,6 +145,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
                 be.setTarget(targetPos);
             }
         }
+        ModMessages.sendToDimension(new UpdateArtilleryNetDataS2CPacket(new Artillery_CoordinatorInterface(this).getTags()), level);
         double[] array = getMedianSet();
         medianDisp = array[1];
         medianPres = array[0];
@@ -178,21 +174,10 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         }
     }
 
-    public void changeMode() {
-        mode ++;
-        if(mode > 3) {
-            mode = 0;
-        }
-        for(Director d: directors) {
-            d.mode(mode);
-        }
-        for(ArtilleryCoordinatorBlockEntity be: suboridinates) {
-            be.setMode(mode);
-        }
-    }
-
-    public void setMode(int mode) {
-        if(mode <= 2 && mode >= 0)  {
+    public void setMode(Mode mode) {
+            CompoundTag tag = Utils.tagOf(this);
+            tag.putByte("mode", mode.NUM);
+            ModMessages.sendToDimension(new UpdateArtilleryNetDataS2CPacket(tag), level);
             this.mode = mode;
             for(Director d: directors) {
                 d.mode(mode);
@@ -200,7 +185,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
             for(ArtilleryCoordinatorBlockEntity be: suboridinates) {
                 be.setMode(mode);
             }
-        }
+
     }
 
     public void addCannon(Layer cannon, Director director) {
@@ -309,8 +294,9 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         }
         if(num != prevReady) {
             if(level != null) {
-                int num0 = num;
-                ModMessages.sendToPlayersRad(new SendReadyCannonsS2CPacket(getBlockPos(), num0), Utils.targetPoint(getBlockPos(), 200, level.dimension()));
+                CompoundTag tag = Utils.tagOf(this);
+                tag.putByte("ready", (byte)num);
+                ModMessages.sendToDimension(new UpdateArtilleryNetDataS2CPacket(tag), level);
             }
         }
         prevReady = num;
@@ -404,9 +390,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         int[] array = new int[3];
         boolean result = Utils.posFromString(targetPos, array);
         if(result) {
-            if(!Utils.arrayEquals(tPos, array)) {
-                changedTarget = true;
-            }
             tPos = array;
             return true;
         } else {
@@ -447,7 +430,7 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         return tag;
     }
 
-    public int getMode() {
+    public Mode getMode() {
         return mode;
     }
 
@@ -571,6 +554,10 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         }
     }
 
+    public void openScreen(Player player) {
+        ModMessages.sendToPlayer(new OpenCoordinatorS2CPacket(this), (ServerPlayer) player);
+    }
+
 
     public ArtilleryCoordinatorBlockEntity topHierarchy() {
         if(superior != null) {
@@ -603,11 +590,11 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         double[] disp = new double[array.size()];
         double[] tTT = new double[array.size()];
         for(int i = 0; i < array.size(); i ++) {
-            Projectile result = ((CalculatorBlockEntity)array.get(i)).getResult();
+            FiringSolutions.Solution result = ((CalculatorBlockEntity)array.get(i)).getResult();
             if(result != null) {
-                pres[i] = result.getPrecision();
-                disp[i] = result.getDispersion();
-                tTT[i] = result.getAirtime();
+                pres[i] = result.PRECISION;
+                disp[i] = result.DISPERSION;
+                tTT[i] = result.AIR_TIME;
             }
         }
         return new double[]{Utils.median(pres), Utils.median(disp), Utils.median(tTT)};
@@ -625,9 +612,6 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         return medianTTT;
     }
 
-    public boolean changedTarget() {
-        return changedTarget;
-    }
 
     public static ArtilleryCoordinatorBlockEntity fromId(String id) {
         for(ArtilleryCoordinatorBlockEntity be: networks) {
@@ -642,17 +626,17 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         try {
             if (level != null && level.isClientSide) {
                 if (superior != null && isCentre) {
-                    ParticleHelper.line(level, getBlockPos(), superior.getBlockPos(), ParticleHelper.Colour.YELLOW);
+                    ParticleHelper.line(level, getBlockPos(), superior.getBlockPos(), ParticleHelper.Colour.YELLOW, 1);
                 }
                 for (ArtilleryCoordinatorBlockEntity be : suboridinates) {
-                    ParticleHelper.line(level, getBlockPos(), be.getBlockPos(), ParticleHelper.Colour.WHITE);
+                    ParticleHelper.line(level, getBlockPos(), be.getBlockPos(), ParticleHelper.Colour.WHITE, 1);
                     be.line(level, false);
                 }
                 for (Director d : directors) {
                     BlockPos pos = d.getBlockEntity().getBlockPos();
-                    ParticleHelper.line(level, getBlockPos(), pos, ParticleHelper.Colour.BLUE);
+                    ParticleHelper.line(level, getBlockPos(), pos, ParticleHelper.Colour.BLUE, 1);
                     for (Layer l : getLayers(d)) {
-                        ParticleHelper.line(level, pos, l.getBlockEntity().getBlockPos(), ParticleHelper.Colour.GREEN);
+                        ParticleHelper.line(level, pos, l.getBlockEntity().getBlockPos(), ParticleHelper.Colour.GREEN, 1);
                     }
                 }
             }
@@ -676,5 +660,44 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
             removeSubordinate(net);
         }
         setChanged();
+    }
+
+    public enum Mode {
+        INDIRECT((byte)0),
+        DIRECT((byte)1),
+        PRECISE((byte)2),
+        DISPERSION((byte)3);
+
+        public final byte NUM;
+
+        private Mode(byte num) {
+            this.NUM = num;
+        }
+
+        public Mode next() {
+            if(NUM + 1 <= 3) {
+                return fromByte((byte)(NUM + 1));
+            }
+            return INDIRECT;
+        }
+
+        public static Mode fromByte(byte num) {
+            for(Mode mode: Mode.class.getEnumConstants()) {
+                if(mode.NUM == num) {
+                    return mode;
+                }
+            }
+            return null;
+        }
+
+        public Component getComponent() {
+            return switch (NUM) {
+                case 0 -> Component.translatable("block.cbc_ballistics.ballistic_calculator.indirect");
+                case 1 -> Component.translatable("block.cbc_ballistics.ballistic_calculator.direct");
+                case 2 -> Component.translatable("block.cbc_ballistics.artillery_network.pres");
+                case 3 -> Component.translatable("block.cbc_ballistics.artillery_network.dis");
+                default -> Component.literal("unknown material");
+            };
+        }
     }
 }

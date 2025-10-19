@@ -2,9 +2,7 @@ package net.felis.cbc_ballistics.screen.custom;
 
 import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
-import net.felis.cbc_ballistics.networking.ModMessages;
-import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
-import net.felis.cbc_ballistics.util.calculator.Projectile;
+import net.felis.cbc_ballistics.util.calculator.FiringSolutions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -288,17 +286,17 @@ public class Ballistic_CalculatorScreen extends Screen {
             if(block.isTooFar()) {
                 pGuiGraphics.drawString(FONT, OUT_OF_RANGE, leftBound + 76, topBound + 86, 16007990);
             } else if(block.getResult() != null){
-                Projectile projectile = block.getResult();
-                double pitch = Math.round(projectile.getPitch() * 1000) / 1000.0;
+                FiringSolutions.Solution solution = block.getResult();
+                double pitch = Math.round(solution.PITCH * 1000) / 1000.0;
                 pGuiGraphics.drawString(FONT, PITCH.getString() + pitch, leftBound + 76, topBound + 86, 16777215, false);
-                pGuiGraphics.drawString(FONT, CHARGES.getString() + ": " + projectile.getCharges(), leftBound + 76, topBound + 94, 16777215, false);
-                double yaw = Math.round(projectile.getCannon().getYaw() * 1000) / 1000.0;
+                pGuiGraphics.drawString(FONT, CHARGES.getString() + ": " + solution.CHARGES, leftBound + 76, topBound + 94, 16777215, false);
+                double yaw = Math.round(solution.YAW * 1000) / 1000.0;
                 pGuiGraphics.drawString(FONT, YAW.getString() + yaw, leftBound + 8, topBound + 106, 16777215);
-                double pres = Math.round(projectile.getPrecision() * 1000) / 1000.0;
+                double pres = Math.round(solution.PRECISION * 1000) / 1000.0;
                 pGuiGraphics.drawString(FONT, PRECISION.getString() + pres + BLOCKS.getString(), leftBound + 8, topBound + 114, 16777215, false);
-                double disp = Math.round(projectile.getDispersion() * 1000) / 1000.0;
+                double disp = Math.round(solution.DISPERSION * 1000) / 1000.0;
                 pGuiGraphics.drawString(FONT, DISPERSION.getString() + disp + BLOCKS.getString(), leftBound + 98, topBound + 106, 16777215, false);
-                double TTT = Math.round((projectile.getAirtime() / 20) * 1000) / 1000.0;
+                double TTT = Math.round((solution.AIR_TIME / 20) * 1000) / 1000.0;
                 pGuiGraphics.drawString(FONT, TRAVEL_TIME.getString() + TTT + SECONDS.getString(), leftBound + 98, topBound + 114, 16777215, false);
             }
         }
@@ -414,16 +412,12 @@ public class Ballistic_CalculatorScreen extends Screen {
     }
 
     private void calculate(Button button) {
-        if(calculateCooldown <= 0 && allowPress) {
+        if(calculateCooldown <= 0) {
             calculateCooldown = 5;
-            allowPress = false;
-            block.calculate(this);
+            block.sync(true);
         }
     }
 
-    public void setAllowPress() {
-        allowPress = true;
-    }
 
     @Override
     public void onClose() {
@@ -436,7 +430,7 @@ public class Ballistic_CalculatorScreen extends Screen {
         block.setDrag(drag.getValue());
         block.setMaxPitch(maxPitch.getValue());
         block.setMinPitch(minPitch.getValue());
-        block.sync();
+        block.sync(false);
         super.onClose();
     }
 

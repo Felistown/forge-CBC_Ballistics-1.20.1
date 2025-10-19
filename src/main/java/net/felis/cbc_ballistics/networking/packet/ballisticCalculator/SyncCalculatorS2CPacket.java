@@ -1,4 +1,4 @@
-package net.felis.cbc_ballistics.networking.packet;
+package net.felis.cbc_ballistics.networking.packet.ballisticCalculator;
 
 import net.felis.cbc_ballistics.networking.ClientHandler;
 import net.minecraft.core.BlockPos;
@@ -9,30 +9,30 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class SendReadyCannonsS2CPacket {
+public class SyncCalculatorS2CPacket {
 
-    private int numReady;
     private BlockPos pos;
+    private int[] targetPos;
 
-    public SendReadyCannonsS2CPacket(BlockPos pos, int numReady) {
+    public SyncCalculatorS2CPacket(BlockPos pos, int[] targetPos) {
         this.pos = pos;
-        this.numReady = numReady;
+        this.targetPos = targetPos;
     }
 
-    public SendReadyCannonsS2CPacket(FriendlyByteBuf buf) {
-        this(buf.readBlockPos(), buf.readInt());
+    public SyncCalculatorS2CPacket(FriendlyByteBuf buf) {
+        this(buf.readBlockPos(), buf.readVarIntArray(3));
     }
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeBlockPos(pos);
-        buf.writeInt(numReady);
+        buf.writeVarIntArray(targetPos);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         supplier.get().enqueueWork(() -> {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
-                    ClientHandler.sendReadyCannons(pos, numReady)
-            );
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                ClientHandler.SyncCalculator(pos, targetPos);
+            });
         });
         return true;
     }

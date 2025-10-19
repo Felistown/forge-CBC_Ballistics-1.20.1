@@ -1,7 +1,7 @@
 package net.felis.cbc_ballistics.entity;
 
 import net.felis.cbc_ballistics.CBC_Ballistics;
-import net.felis.cbc_ballistics.entity.custom.RangefinderEntity;
+import net.felis.cbc_ballistics.entity.custom.DetectingProjectile;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -15,9 +15,9 @@ public class ModEntities {
 
 
 
-    public static final RegistryObject<EntityType<RangefinderEntity>> RANGEFINDERENTITY =
-            ENTITY_TYPES.register("rangefinderentity", () -> EntityType.Builder.<RangefinderEntity>of(RangefinderEntity ::new, MobCategory.MISC)
-                    .sized(Float.MIN_VALUE * 2, Float.MIN_VALUE * 2).build("rangefinderentity"));
+    public static final RegistryObject<EntityType<DetectingProjectile>> DETECTING_PROJECTILE =
+            ENTITY_TYPES.register("detecting_projectile", () -> EntityType.Builder.<DetectingProjectile>of(DetectingProjectile::new, MobCategory.MISC)
+                    .sized(Float.MIN_VALUE * 2, Float.MIN_VALUE * 2).build("detecting_projectile"));
 
 
     public static void register(IEventBus eventBus) {

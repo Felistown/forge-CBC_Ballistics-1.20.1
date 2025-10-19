@@ -1,4 +1,4 @@
-package net.felis.cbc_ballistics.networking.packet;
+package net.felis.cbc_ballistics.networking.packet.ballisticCalculator;
 
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -15,19 +15,21 @@ public class SyncCalculatorC2SPacket {
 
     private BlockPos pos;
     private CompoundTag tags;
+    private boolean calculate;
 
-    public SyncCalculatorC2SPacket(BlockPos pos, CompoundTag tags) {
+    public SyncCalculatorC2SPacket(BlockPos pos, CompoundTag tags, boolean calculate) {
         this.pos = pos;
         this.tags = tags;
     }
 
     public SyncCalculatorC2SPacket(FriendlyByteBuf buf) {
-        this(buf.readBlockPos(), buf.readNbt());
+        this(buf.readBlockPos(), buf.readNbt(), buf.readBoolean());
     }
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeBlockPos(pos);
         buf.writeNbt(tags);
+        buf.writeBoolean(calculate);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
@@ -38,8 +40,8 @@ public class SyncCalculatorC2SPacket {
             BlockEntity blockS = level.getBlockEntity(pos);
             if(blockS instanceof CalculatorBlockEntity block) {
                 block.syncFrom(tags);
+                block.calculate();
             }
-
         });
         return true;
     }

@@ -1,9 +1,9 @@
 package net.felis.cbc_ballistics.screen.custom;
 
 import net.felis.cbc_ballistics.CBC_Ballistics;
-import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.networking.ModMessages;
-import net.felis.cbc_ballistics.networking.packet.SendArtilleryNetworkInstructionC2SPacket;
+import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.SendArtilleryNetworkInstructionC2SPacket;
+import net.felis.cbc_ballistics.screen.Artillery_CoordinatorInterface;
 import net.felis.cbc_ballistics.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -13,10 +13,8 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.TextAndImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
 public class Artillery_CoordinatorScreen extends Screen {
@@ -31,10 +29,6 @@ public class Artillery_CoordinatorScreen extends Screen {
     private static final Component SEND = Component.translatable("block.cbc_ballistics.artillery_network.send");
     private static final Component SET = Component.translatable("block.cbc_ballistics.artillery_network.set");
     private static final Component FIRE = Component.translatable("block.cbc_ballistics.artillery_network.fire");
-    private static final Component DIRECT = Component.translatable("block.cbc_ballistics.ballistic_calculator.direct");
-    private static final Component INDIRECT = Component.translatable("block.cbc_ballistics.ballistic_calculator.indirect");
-    private static final Component PRECISE= Component.translatable("block.cbc_ballistics.artillery_network.pres");
-    private static final Component DISPERSION = Component.translatable("block.cbc_ballistics.artillery_network.dis");
     private static final Component TARGET_POS = Component.translatable("block.cbc_ballistics.ballistic_calculator.targetPos");
     private static final Component MEDIAN = Component.translatable("block.cbc_ballistics.artillery_network.median");
     private static final Component PRES = Component.translatable("block.cbc_ballistics.ballistic_calculator.precision");
@@ -52,11 +46,12 @@ public class Artillery_CoordinatorScreen extends Screen {
 
     private final int imageHeight;
     private final int imageWidth;
-    private ArtilleryCoordinatorBlockEntity block;
+    private Artillery_CoordinatorInterface data;
     private final BlockPos pos;
 
     private EditBox targetPos;
     private boolean targetError;
+    private boolean changedTarget;
 
     private TextAndImageButton sendButton;
     private int sendCooldown;
@@ -72,10 +67,12 @@ public class Artillery_CoordinatorScreen extends Screen {
     private double medianTTT;
 
 
-    public Artillery_CoordinatorScreen(BlockPos pos) {
+    public Artillery_CoordinatorScreen(BlockPos pos, Artillery_CoordinatorInterface data) {
         super(Component.literal("Screen"));
         this.imageWidth = 96 * 2;
         this.imageHeight = 54 * 2;
+
+        this.data = data;
         this.pos = pos;
         medianDisp = 0.0;
         medianTTT = 0.0;
@@ -88,23 +85,16 @@ public class Artillery_CoordinatorScreen extends Screen {
         leftBound = (width - imageWidth) / 2;
         topBound = (height - imageHeight) / 2;
         ticks = 0;
-        if (minecraft != null && minecraft.level != null) {
-            BlockEntity block = minecraft.level.getBlockEntity(pos);
-            if (block instanceof ArtilleryCoordinatorBlockEntity) {
-                this.block = (ArtilleryCoordinatorBlockEntity) block;
-            }
-        }
 
         int x = imageWidth / 2;
         int y = (int)(imageHeight * 0.75);
-        CompoundTag tag = block.getPersistentData();
 
         //add widgets here
         targetPos = addRenderableWidget(new EditBox(FONT, leftBound + 8, topBound + 14, 176, 8, TARGET_POS));
         targetPos.setMaxLength(Integer.MAX_VALUE);
         targetPos.setSuggestion("_");
         targetPos.setBordered(false);
-        targetPos.setValue(tag.getString("targetPos"));
+        targetPos.setValue(data.getTargetPos());
 
         sendButton = addRenderableWidget(TextAndImageButton.builder(SEND, getButton(sendCooldown),this::send).build());
         sendButton.setPosition(leftBound + 8,topBound + 26);
@@ -134,7 +124,6 @@ public class Artillery_CoordinatorScreen extends Screen {
         renderBackground(pGuiGraphics);
         pGuiGraphics.blit(BACKGROUND, leftBound, topBound, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
         super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
-        CompoundTag tag = block.getPersistentData();
         //add renderables here
 
         if(targetError) {
@@ -142,16 +131,15 @@ public class Artillery_CoordinatorScreen extends Screen {
         } else {
             pGuiGraphics.drawString(FONT, TARGET_POS, leftBound + 8, topBound + 6, 16777215, false);
         }
-        int[] array = new int[3];
-        Utils.posFromString(tag.getString("targetPos"), array);
-        if(!block.changedTarget()) {
+
+        if(targetPos.getValue().equals(data.getTargetPos())) {
             sendButton.renderString(pGuiGraphics, FONT, 16777215);
         } else {
             sendButton.renderString(pGuiGraphics, FONT, 16007990);
         }
         sendButton.renderTexture(pGuiGraphics, getButton(sendCooldown),leftBound + 8,topBound + 26, 0, 0, 0, 56, 16, 56, 16 );
 
-        if(block.allSet()) {
+        if(!changedTarget) {
             setButton.renderString(pGuiGraphics, FONT, 16777215);
         } else {
             setButton.renderString(pGuiGraphics, FONT, 16007990);
@@ -164,26 +152,24 @@ public class Artillery_CoordinatorScreen extends Screen {
 
         fireButton.renderTexture(pGuiGraphics, getButton(fireCooldown),leftBound + 128,topBound + 66, 0, 0, 0, 56, 16, 56, 16 );
 
-        pGuiGraphics.drawString(FONT, ID.getString() + block.getNetwork_id(), leftBound + 8, topBound + 66, 16777215, false);
-        pGuiGraphics.drawString(FONT, NUM_CAN.getString() + ("" + block.getAllCannons().size()), leftBound + 68, topBound + 66, 16777215, false);
-        pGuiGraphics.drawString(FONT, NUM_DIR.getString() + ("" + block.getAllDirectors().size()), leftBound + 8, topBound + 74, 16777215, false);
-        pGuiGraphics.drawString(FONT, READY_CAN.getString() + ("" + tag.getInt("readies")), leftBound + 68, topBound + 74, 16777215, false);
+        pGuiGraphics.drawString(FONT, ID.getString() + data.getNetworkId(), leftBound + 8, topBound + 66, 16777215, false);
+        pGuiGraphics.drawString(FONT, NUM_CAN.getString() + ("" + data.getNumCannons()), leftBound + 68, topBound + 66, 16777215, false);
+        pGuiGraphics.drawString(FONT, NUM_DIR.getString() + ("" + data.getNumDirector()), leftBound + 8, topBound + 74, 16777215, false);
+        pGuiGraphics.drawString(FONT, READY_CAN.getString() + ("" + data.getNumReadyCannons()), leftBound + 68, topBound + 74, 16777215, false);
 
+        float[] medianSet = data.getMedianSet();
         pGuiGraphics.drawString(FONT, MEDIAN, leftBound + 8, topBound + 46, 16777215, false);
-        double pres = Math.round(block.getMedianPres() * 1000) / 1000.0;
+        double pres = Math.round(medianSet[0] * 1000) / 1000.0;
         pGuiGraphics.drawString(FONT, PRES.getString() + pres + BLOCKS.getString(), leftBound + 8, topBound + 54, 16777215, false);
-        double disp = Math.round(block.getMedianDisp() * 1000) / 1000.0;
+        double disp = Math.round(medianSet[1] * 1000) / 1000.0;
         pGuiGraphics.drawString(FONT, DISP.getString() + disp + BLOCKS.getString(), leftBound + 98, topBound + 46, 16777215, false);
-        double tTT = Math.round((block.getMedianTTT()/ 20) * 1000) / 1000.0;
+        double tTT = Math.round((medianSet[2] / 20) * 1000) / 1000.0;
         pGuiGraphics.drawString(FONT, TTT.getString() + tTT + SECONDS.getString(), leftBound + 98, topBound + 54, 16777215, false);
 
         pGuiGraphics.drawString(FONT, SUPER, leftBound + 8, topBound + 86, 16777215, false);
-        ArtilleryCoordinatorBlockEntity be = block.getSuperior();
-        if(be != null && be.getNetwork_id() != null) {
-            pGuiGraphics.drawString(FONT, be.getNetwork_id(), leftBound + 8, topBound + 94, 16777215, false);
-        }
+        pGuiGraphics.drawString(FONT, data.getSuperiorId(), leftBound + 8, topBound + 94, 16777215, false);
         pGuiGraphics.drawString(FONT, SUB, leftBound + 98, topBound + 86, 16777215, false);
-        pGuiGraphics.drawString(FONT, "" + block.getSuboridinates().size(), leftBound + 98, topBound + 94, 16777215, false);
+        pGuiGraphics.drawString(FONT, "" + data.getNumSubnets(), leftBound + 98, topBound + 94, 16777215, false);
     }
 
 
@@ -194,7 +180,7 @@ public class Artillery_CoordinatorScreen extends Screen {
         if(targetPos.getValue().isEmpty()) {
             targetError = false;
         } else {
-            targetError = !block.setTargetPos(targetPos.getValue());
+            targetError = !Utils.posFromString(targetPos.getValue(), new int[3]);
         }
     }
 
@@ -217,52 +203,38 @@ public class Artillery_CoordinatorScreen extends Screen {
     }
 
     private Component getMode() {
-        switch (block.getMode()) {
-            case 0:
-                return INDIRECT;
-            case 1:
-                return DIRECT;
-            case 2:
-                return PRECISE;
-            case 3:
-                return DISPERSION;
-            default:
-                return Component.empty();
-        }
+        return data.getMode().getComponent();
     }
 
     public void send(Button button) {
         if(sendCooldown <= 0 && !targetError) {
+            changedTarget = true;
             sendCooldown = 5;
-            if(block.getTargetPos() != null) {
-                CompoundTag tag = block.getPersistentData();
-                ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(block.getBlockPos(), (byte) 0, tag.getString("targetPos")));
-                block.setTarget(tag.getString("targetPos"));
-            }
+            data.setTargetPos(targetPos.getValue());
+            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(pos, (byte) 0, targetPos.getValue()));
         }
     }
 
     public void set(Button button) {
         if(setCooldown <= 0 && !targetError) {
+            changedTarget = false;
             setCooldown = 5;
-            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(block.getBlockPos(), (byte)1, "nothing"));
-            block.target();
+            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(pos, (byte)1, "nothing"));
         }
     }
 
     public void mode(Button button) {
         if(modeCooldown <= 0 && !targetError) {
             modeCooldown = 5;
-            block.changeMode();
+            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(pos, (byte) 2,"" + data.getMode().next().NUM));
             send(null);
-            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(block.getBlockPos(), (byte) 2,"" + block.getMode()));
         }
     }
 
     public void fire(Button button) {
         if(fireCooldown <= 0 && !targetError) {
             fireCooldown = 5;
-            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(block.getBlockPos(), (byte)3, "nothing"));
+            ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(pos, (byte)3, "nothing"));
         }
     }
 

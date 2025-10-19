@@ -2,7 +2,6 @@ package net.felis.cbc_ballistics.block.custom;
 
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.item.ModItems;
-import net.felis.cbc_ballistics.screen.ClientHooks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -20,8 +19,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 import org.jetbrains.annotations.Nullable;
 
 public class ArtilleryCoordinatorBlock extends BaseEntityBlock {
@@ -68,19 +65,15 @@ public class ArtilleryCoordinatorBlock extends BaseEntityBlock {
             BlockEntity entity = pLevel.getBlockEntity(pPos);
             if (entity instanceof ArtilleryCoordinatorBlockEntity block) {
                 if (pLevel.isClientSide) {
+                    return InteractionResult.SUCCESS;
+                } else {
                     ItemStack item = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
                     if (item.getItem() == ModItems.RANGEFINDER.get() && item.getTag() != null) {
                         block.setTargetPos(item.getTag().getString("results"));
+                        System.out.println("targetpos block item = " + item.getTag().getString("results"));
                     }
-                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientHooks.openArtilleryCoordinatorScreen(pPos));
-                    return InteractionResult.SUCCESS;
-                } else {
-                    ArtilleryCoordinatorBlockEntity sup = block.getSuperior();
-                    if(sup != null) {
-                        sup.syncToClient(pPlayer);
-                    } else {
-                        block.syncToClient(pPlayer);
-                    }
+                    //System.out.println("targetpos block = " + Utils.formatPos(block.getTargetPos()));
+                    block.openScreen(pPlayer);
                 }
             }
         }

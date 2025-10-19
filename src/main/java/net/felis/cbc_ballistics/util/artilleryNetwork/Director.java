@@ -20,7 +20,7 @@ public interface Director extends NetworkComponent {
 
     public void target();
 
-    public void mode(int mode);
+    public void mode(ArtilleryCoordinatorBlockEntity.Mode mode);
 
     public void removeNetwork();
 }

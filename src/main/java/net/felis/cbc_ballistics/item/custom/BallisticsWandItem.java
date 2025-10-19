@@ -3,6 +3,7 @@ package net.felis.cbc_ballistics.item.custom;
 import net.felis.cbc_ballistics.block.entity.CalculatorBlockEntity;
 import net.felis.cbc_ballistics.block.entity.CannonControllerBlockEntity;
 import net.felis.cbc_ballistics.util.IHaveData;
+import net.felis.cbc_ballistics.util.calculator.FiringSolutions;
 import net.felis.cbc_ballistics.util.calculator.Projectile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -56,13 +57,13 @@ public class BallisticsWandItem extends Item implements IHaveData {
                     if (block instanceof CalculatorBlockEntity && !pContext.getLevel().isClientSide) {
                         block = Minecraft.getInstance().player.level().getBlockEntity(pContext.getClickedPos());
                         if (((CalculatorBlockEntity) block).getResult() != null) {
-                            Projectile results = ((CalculatorBlockEntity) block).getResult();
+                            FiringSolutions.Solution results = ((CalculatorBlockEntity) block).getResult();
                             CompoundTag tags = pContext.getItemInHand().getTag();
                             if(tags == null) {
                                 pContext.getItemInHand().setTag(new CompoundTag());
                             }
-                            tags.putFloat("pitch", (float) results.getPitch());
-                            tags.putFloat("yaw", (float) results.getCannon().getYaw());
+                            tags.putFloat("pitch", results.PITCH);
+                            tags.putFloat("yaw", results.YAW);
                         }
                     } else if (block instanceof CannonMountBlockEntity && !pContext.getLevel().isClientSide) {
                         CompoundTag tags = pContext.getItemInHand().getTag();

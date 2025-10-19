@@ -2,10 +2,14 @@ package net.felis.cbc_ballistics.networking;
 
 import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.networking.packet.*;
-import net.felis.cbc_ballistics.util.Utils;
-import net.minecraft.core.BlockPos;
+import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.*;
+import net.felis.cbc_ballistics.networking.packet.ballisticCalculator.SyncCalculatorC2SPacket;
+import net.felis.cbc_ballistics.networking.packet.ballisticCalculator.SyncCalculatorS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.radio.RecieveRadioDateS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.radio.SendRadioDataC2SPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -28,10 +32,10 @@ public class ModMessages {
 
 
     public static void register() {
-        INSTANCE.messageBuilder(RangefindC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(RangefindC2SPacket::new)
-                .encoder(RangefindC2SPacket::toBytes)
-                .consumerMainThread(RangefindC2SPacket::handle)
+        INSTANCE.messageBuilder(sendSolutionsS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(sendSolutionsS2CPacket::new)
+                .encoder(sendSolutionsS2CPacket::toBytes)
+                .consumerMainThread(sendSolutionsS2CPacket::handle)
                 .add();
         INSTANCE.messageBuilder(SyncCalculatorC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SyncCalculatorC2SPacket::new)
@@ -42,11 +46,6 @@ public class ModMessages {
                 .decoder(SyncCalculatorS2CPacket::new)
                 .encoder(SyncCalculatorS2CPacket::toBytes)
                 .consumerMainThread(SyncCalculatorS2CPacket::handle)
-                .add();
-        INSTANCE.messageBuilder(SendReadyCannonsS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(SendReadyCannonsS2CPacket::new)
-                .encoder(SendReadyCannonsS2CPacket::toBytes)
-                .consumerMainThread(SendReadyCannonsS2CPacket::handle)
                 .add();
         INSTANCE.messageBuilder(SendArtilleryNetworkInstructionC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SendArtilleryNetworkInstructionC2SPacket::new)
@@ -68,8 +67,32 @@ public class ModMessages {
                 .encoder(SyncManagerItemS2CPacket::toBytes)
                 .consumerMainThread(SyncManagerItemS2CPacket::handle)
                 .add();
+        INSTANCE.messageBuilder(OpenCoordinatorS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(OpenCoordinatorS2CPacket::new)
+                .encoder(OpenCoordinatorS2CPacket::toBytes)
+                .consumerMainThread(OpenCoordinatorS2CPacket::handle)
+                .add();
+        INSTANCE.messageBuilder(UpdateArtilleryNetDataS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(UpdateArtilleryNetDataS2CPacket::new)
+                .encoder(UpdateArtilleryNetDataS2CPacket::toBytes)
+                .consumerMainThread(UpdateArtilleryNetDataS2CPacket::handle)
+                .add();
+        INSTANCE.messageBuilder(OpenCoordinatorC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(OpenCoordinatorC2SPacket::new)
+                .encoder(OpenCoordinatorC2SPacket::toBytes)
+                .consumerMainThread(OpenCoordinatorC2SPacket::handle)
+                .add();
+        INSTANCE.messageBuilder(SendRadioDataC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SendRadioDataC2SPacket::new)
+                .encoder(SendRadioDataC2SPacket::toBytes)
+                .consumerMainThread(SendRadioDataC2SPacket::handle)
+                .add();
+        INSTANCE.messageBuilder(RecieveRadioDateS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(RecieveRadioDateS2CPacket::new)
+                .encoder(RecieveRadioDateS2CPacket::toBytes)
+                .consumerMainThread(RecieveRadioDateS2CPacket::handle)
+                .add();
     }
-
     public static <MSG> void sendToServer(MSG message) {
         INSTANCE.sendToServer(message);
     }
@@ -82,5 +105,11 @@ public class ModMessages {
         INSTANCE.send(PacketDistributor.NEAR.with(() ->  point), message);
     }
 
+    public static <MSG> void sendToDimension(MSG message, Level level) {
+        INSTANCE.send(PacketDistributor.DIMENSION.with(level::dimension), message);
+    }
 
+    public static <MSG> void sendToAll(MSG message) {
+        INSTANCE.send(PacketDistributor.ALL.noArg(), message);
+    }
 }

@@ -11,7 +11,7 @@ public class ClientHooks {
         Minecraft.getInstance().setScreen(new Ballistic_CalculatorScreen(pos));
     }
 
-    public static void openArtilleryCoordinatorScreen(BlockPos pos) {
-        Minecraft.getInstance().setScreen(new Artillery_CoordinatorScreen(pos));
+    public static void openArtilleryCoordinatorScreen(BlockPos pos, Artillery_CoordinatorInterface data) {
+        Minecraft.getInstance().setScreen(new Artillery_CoordinatorScreen(pos, data));
     }
 }

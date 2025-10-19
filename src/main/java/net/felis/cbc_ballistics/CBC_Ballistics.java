@@ -2,7 +2,6 @@ package net.felis.cbc_ballistics;
 
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import net.felis.cbc_ballistics.block.ModBlocks;
 import net.felis.cbc_ballistics.block.entity.ModBlockEntities;
 import net.felis.cbc_ballistics.config.CBC_BallisticsCommonConfigs;
 import net.felis.cbc_ballistics.entity.ModEntities;
@@ -94,7 +93,7 @@ public class CBC_Ballistics
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            EntityRenderers.register(ModEntities.RANGEFINDERENTITY.get(), NoopRenderer::new);
+            EntityRenderers.register(ModEntities.DETECTING_PROJECTILE.get(), NoopRenderer::new);
         }
     }
 }

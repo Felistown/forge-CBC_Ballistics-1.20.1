@@ -96,7 +96,7 @@ public class ArtilleryNetworkManagerItem extends Item implements IHaveData {
     }
 
     private void connect(NetworkComponent c) {
-        if(c instanceof ArtilleryCoordinatorBlockEntity n && !n.getSuboridinates().contains(network) && Utils.distFrom(n, network) <= 100) {
+        if(c instanceof ArtilleryCoordinatorBlockEntity n && !n.getSuboridinates().contains(network) && Utils.distFrom(n, network) <= 1000000000) {
             network.superiorOf(n);
         } else if(c.getNetwork() == null) {
             if(c instanceof Director d  && Utils.distFrom(d.getBlockEntity(), network) <= 50) {

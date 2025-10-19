@@ -2,9 +2,10 @@ package net.felis.cbc_ballistics.event;
 
 import net.felis.cbc_ballistics.CBC_Ballistics;
 import net.felis.cbc_ballistics.item.ModItems;
-import net.felis.cbc_ballistics.networking.ModMessages;
-import net.felis.cbc_ballistics.networking.packet.RangefindC2SPacket;
+import net.felis.cbc_ballistics.item.custom.RadioItem;
+import net.felis.cbc_ballistics.item.custom.RangefinderItem;
 import net.felis.cbc_ballistics.util.IHaveData;
+import net.felis.cbc_ballistics.util.KeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -14,11 +15,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -81,21 +80,41 @@ public class ModClientEvents {
         }
     }
 
+    @SubscribeEvent
+    public static void onKeyRegister(RegisterKeyMappingsEvent event) {
+        event.register(KeyBinding.OPEN_RADIO_KEY);
+    }
+
     @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, value = Dist.CLIENT)
     public static class ClientForgeEvents {
 
         @SubscribeEvent
-        public static void onKeyInput(InputEvent.MouseButton event) {
+        public static void onKeyInputMouse(InputEvent.MouseButton event) {
             Player player = Minecraft.getInstance().player;
             if(player != null && player.level().isClientSide) {
                 ItemStack stack = player.getUseItem();
                 int button = event.getButton();
                 int action = event.getAction();
                 if (button == 0 && action == 1 && player.isUsingItem() && stack.getItem() == ModItems.RANGEFINDER.get() && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
-                    ModMessages.sendToServer(new RangefindC2SPacket());
+                    ItemStack thing = player.getUseItem();
+                    Item item = thing.getItem();
+                    if (item instanceof RangefinderItem rangefinder) {
+                        rangefinder.rangeFind(thing);
+                    }
+                }
+            }
+        }
+
+        @SubscribeEvent
+        public static void onKeyInputKey(InputEvent.Key event) {
+            Player player = Minecraft.getInstance().player;
+            if(KeyBinding.OPEN_RADIO_KEY.consumeClick()) {
+                System.out.println("key output");
+                ItemStack chestplate = player.getInventory().armor.get(2);
+                if(chestplate.getItem() instanceof RadioItem radio) {
+                    radio.openRadio(chestplate);
                 }
             }
         }
     }
-
 }

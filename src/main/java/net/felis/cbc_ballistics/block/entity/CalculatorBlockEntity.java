@@ -3,15 +3,15 @@ package net.felis.cbc_ballistics.block.entity;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import net.felis.cbc_ballistics.block.ModBlocks;
 import net.felis.cbc_ballistics.networking.ModMessages;
-import net.felis.cbc_ballistics.networking.packet.SyncCalculatorC2SPacket;
-import net.felis.cbc_ballistics.networking.packet.SyncCalculatorS2CPacket;
-import net.felis.cbc_ballistics.screen.custom.Ballistic_CalculatorScreen;
+import net.felis.cbc_ballistics.networking.packet.ballisticCalculator.SyncCalculatorC2SPacket;
+import net.felis.cbc_ballistics.networking.packet.ballisticCalculator.SyncCalculatorS2CPacket;
+import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.sendSolutionsS2CPacket;
 import net.felis.cbc_ballistics.util.Utils;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Director;
 import net.felis.cbc_ballistics.util.artilleryNetwork.Layer;
 import net.felis.cbc_ballistics.util.calculator.Cannon;
-import net.felis.cbc_ballistics.util.calculator.Projectile;
-import net.felis.cbc_ballistics.util.calculator.Target;
+import net.felis.cbc_ballistics.util.calculator.FiringSolutions;
+import net.felis.cbc_ballistics.util.calculator.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -29,11 +29,6 @@ import java.util.List;
 
 public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, IHaveGoggleInformation, Director {
 
-    private static final Component CAST_IRON = Component.translatable("block.cbc_ballistics.ballistic_calculator.castIron");
-    private static final Component STEEL = Component.translatable("block.cbc_ballistics.ballistic_calculator.steel");
-    private static final Component BRONZE = Component.translatable("block.cbc_ballistics.ballistic_calculator.bronze");
-    private static final Component NETHER_STEEL = Component.translatable("block.cbc_ballistics.ballistic_calculator.netherSteel");
-    private static final Component WROUGHT_IRON = Component.translatable("block.cbc_ballistics.ballistic_calculator.wroughtIron");
     private static final Component CHARGES = Component.translatable("block.cbc_ballistics.ballistic_calculator.charge");
     private static final Component PITCH = Component.translatable("block.cbc_ballistics.ballistic_calculator.pitch");
     private static final Component YAW = Component.translatable("block.cbc_ballistics.ballistic_calculator.yaw");
@@ -42,7 +37,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     private boolean calculate;
     private boolean isDirectFire;
 
-    private int material;
+    private Material material;
 
     private int[] cPos;
     private int[] tPos;
@@ -51,10 +46,10 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     private int len;
     private int minC;
     private int maxC;
-    private double grav;
-    private double drg;
+    private float grav;
+    private float drg;
 
-    private Projectile[] results;
+    private FiringSolutions results;
     private boolean ready;
     private boolean tooFar;
 
@@ -83,49 +78,66 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         pTag.putInt("material", 3);
         pTag.putString("gravity", "0.05");
         pTag.putString("drag", "0.99");
-        material = 3;
+        material = Material.STEEL;
         minP = -30;
         maxP = 60;
-        grav = 0.05;
-        drg = 0.99;
+        grav = 0.05f;
+        drg = 0.99f;
         minC = 1;
         maxC = 1;
         tooFar = false;
     }
 
-    public boolean calculate(Ballistic_CalculatorScreen screen) {
-        Cannon myCannon = new Cannon(cPos[0], cPos[1], cPos[2], len, minP, maxP, getMaterialString());
-        myCannon.setDrag(drg);
-        myCannon.setGravity(grav);
-        Target myTarget = new Target(tPos[0], tPos[1], tPos[2], myCannon);
-        myCannon.setTarget(myTarget);
-        ready = true;
-        try {
-            results = myCannon.interpolateTarget(minC, maxC);
-            tooFar = false;
-            if (screen != null) {
-                screen.setAllowPress();
+    public void calculate() {
+        if(!level.isClientSide) {
+            System.out.println("calculating");
+            Cannon myCannon = new Cannon.Builder(level)
+                    .at(Utils.arrayToBlockPos(cPos))
+                    .grav(grav)
+                    .length(len)
+                    .drag(drg)
+                    .minCharge(minC)
+                    .maxCharge(maxC)
+                    .minPitch(minP)
+                    .maxPitch(maxP)
+                    .material(material)
+                    .build();
+            ready = true;
+            try {
+                results = myCannon.interpolateTarget(Utils.arrayToBlockPos(tPos));
+                tooFar = false;
+            } catch (RuntimeException e) {
+                System.out.println(e.toString());
+                tooFar = true;
+                results = new FiringSolutions();
+            } finally {
+                ModMessages.sendToPlayersRad(new sendSolutionsS2CPacket(getBlockPos(), results), Utils.targetPoint(getBlockPos(), 160, level.dimension()));
             }
-            return true;
-        } catch (RuntimeException e) {
-            tooFar = true;
-            if (screen != null) {
-                screen.setAllowPress();
-            }
-            return false;
         }
+    }
+
+    public void setSolutions(FiringSolutions solutions) {
+        if(solutions == null) {
+            tooFar = true;
+        }
+        ready = true;
+        results = solutions;
     }
 
     public boolean isReady() {
         return ready;
     }
 
-    public Projectile getResult() {
+    public FiringSolutions getResults() {
+        return results;
+    }
+
+    public FiringSolutions.Solution getResult() {
         if (results != null) {
             if (isDirectFire) {
-                return results[0];
+                return results.DIRECT;
             } else {
-                return results[1];
+                return results.INDIRECT;
             }
         }
         return null;
@@ -143,21 +155,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public Component getMaterial() {
-        switch (material) {
-            case 0:
-                return CAST_IRON;
-            case 1:
-                return WROUGHT_IRON;
-            case 2:
-                return BRONZE;
-            case 3:
-                return STEEL;
-            case 4:
-                return NETHER_STEEL;
-            default:
-                material = 0;
-                return Component.literal("Unknown material");
-        }
+        return material.getComponent();
     }
 
 
@@ -186,7 +184,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("drag", drag);
         setChanged();
         try {
-            drg = Double.parseDouble(drag);
+            drg = Float.parseFloat(drag);
             return drg > 0;
         } catch (NumberFormatException e) {
             return false;
@@ -225,7 +223,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("gravity", gravity);
         setChanged();
         try {
-            grav = Double.parseDouble(gravity);
+            grav = Float.parseFloat(gravity);
             return grav > 0;
         } catch (NumberFormatException e) {
             return false;
@@ -248,11 +246,8 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     }
 
     public void cycleMaterial() {
-        material++;
-        if (material > 4) {
-            material = 0;
-        }
-        getPersistentData().putInt("material", material);
+        material = material.next();
+        getPersistentData().putInt("material", material.no);
         setChanged();
     }
 
@@ -268,25 +263,6 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
             return maxP > minP && maxP < 90;
         } catch (NumberFormatException e) {
             return false;
-        }
-    }
-
-
-    public String getMaterialString() {
-        switch (material) {
-            case 0:
-                return "castiron";
-            case 1:
-                return "wroughtiron";
-            case 2:
-                return "bronze";
-            case 3:
-                return "steel";
-            case 4:
-                return "nethersteel";
-            default:
-                material = 0;
-                return "Unknown material";
         }
     }
 
@@ -324,7 +300,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
 
     @Override
     protected void saveAdditional(CompoundTag pTag) {
-        pTag.putInt("material", material);
+        pTag.putInt("material", material.no);
         super.saveAdditional(pTag);
     }
 
@@ -333,7 +309,7 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         super.load(pTag);
         pTag.merge(getPersistentData());
         setChanged();
-        material = pTag.getInt("material");
+        material = Material.fromInt(pTag.getInt("material"));
         setCannonPos(pTag.getString("cannonPos"));
         setTargetPos(pTag.getString("targetPos"));
         setMinPitch(pTag.getString("minPitch"));
@@ -345,14 +321,14 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         setMinCharge(pTag.getString("minCharge"));
     }
 
-    public void sync() {
+    public void sync(Boolean calculate) {
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
-                ModMessages.sendToServer(new SyncCalculatorC2SPacket(getBlockPos(), getPersistentData()))
+                ModMessages.sendToServer(new SyncCalculatorC2SPacket(getBlockPos(), getPersistentData(), calculate))
         );
     }
 
     public void syncFrom(CompoundTag pTag) {
-        material = pTag.getInt("material");
+        material = Material.fromInt(pTag.getInt("material"));
         setCannonPos(pTag.getString("cannonPos"));
         setTargetPos(pTag.getString("targetPos"));
         setMinPitch(pTag.getString("minPitch"));
@@ -378,11 +354,11 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         if (tooFar) {
             tooltip.add(OUT_OF_RANGE);
         } else if (results != null) {
-            double yaw = Math.round(getResult().getTarget().getYaw() * 1000) / 1000.0;
-            double pitch = Math.round(getResult().getPitch() * 1000) / 1000.0;
+            double yaw = Math.round(results.YAW * 1000) / 1000.0;
+            double pitch = Math.round(getResult().PITCH * 1000) / 1000.0;
             tooltip.add(PITCH.copy().append("" + pitch));
             tooltip.add(YAW.copy().append("" + yaw));
-            tooltip.add(CHARGES.copy().append(": " + getResult().getCharges()));
+            tooltip.add(CHARGES.copy().append(": " + getResult().CHARGES));
         } else {
             tooltip.add(Component.translatable("block.cbc_ballistics.ballistic_calculator.tooltip.need_results"));
         }
@@ -395,11 +371,9 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         getPersistentData().putString("targetPos", ("X = " + target[0] + ", Y =" + target[1] + ", Z = " + target[2]));
         setChanged();
         tPos = target;
-        calculate(null);
+        calculate();
         if (level != null && !level.isClientSide) {
-            //DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> ()->
             ModMessages.sendToPlayersRad(new SyncCalculatorS2CPacket(getBlockPos(), target), Utils.targetPoint(getBlockPos(), 200, level.dimension()));
-            //);
         }
     }
 
@@ -431,9 +405,9 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
     @Override
     public void target() {
         if (results != null) {
-            Projectile projectile = getResult();
+            FiringSolutions.Solution projectile = getResult();
             for (Layer c : network.getLayers(this)) {
-                c.setTarget((float) projectile.getPitch(), (float) projectile.getTarget().getYaw());
+                c.setTarget((float) projectile.PITCH, projectile.YAW);
             }
             redstonePulse = 8;
         }
@@ -457,38 +431,28 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
         if (redstonePulse < 1) {
             return 0;
         } else if (results != null) {
-            return getResult().getCharges();
+            return getResult().CHARGES;
         }
         return 0;
     }
 
     @Override
-    public void mode(int mode) {
-        /*
-        0 = indirect
-        1 = direct
-        2 = best precision
-        3 = best dispersion
-        */
+    public void mode(ArtilleryCoordinatorBlockEntity.Mode mode) {
         switch (mode) {
-            case 0:
+            case INDIRECT:
                 isDirectFire = false;
                 break;
-            case 1:
+            case DIRECT:
                 isDirectFire = true;
                 break;
-            case 2:
+            case PRECISE:
                 if (results != null) {
-                    Projectile direct = results[0];
-                    Projectile indirect = results[1];
-                    isDirectFire = !(direct.getPrecisionEstimate() < indirect.getPrecisionEstimate());
+                    isDirectFire = !(results.DIRECT.PRECISION < results.INDIRECT.PRECISION);
                 }
                 break;
-            case 3:
+            case DISPERSION:
                 if (results != null) {
-                    Projectile direct1 = results[0];
-                    Projectile indirect1 = results[1];
-                    isDirectFire = !(direct1.getDispersion() < indirect1.getDispersion());
+                    isDirectFire = !(results.DIRECT.DISPERSION < results.INDIRECT.DISPERSION);
                 }
                 break;
         }
@@ -504,9 +468,9 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
 
     public boolean isSet() {
         if (results != null) {
-            Projectile result = getResult();
-            float pitch = (float) result.getPitch();
-            float yaw = (float) result.getTarget().getYaw();
+            FiringSolutions.Solution result = getResult();
+            float pitch = result.PITCH;
+            float yaw = result.YAW;
             for (Layer l : network.getLayers(this)) {
                 if (l instanceof CannonControllerBlockEntity c) {
                     if (c.getTargetYaw() != yaw || c.getTargetPitch() != pitch) {
