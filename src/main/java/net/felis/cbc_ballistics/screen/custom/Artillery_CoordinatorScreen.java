@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.TextAndImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -49,10 +50,12 @@ public class Artillery_CoordinatorScreen extends Screen {
     private Artillery_CoordinatorInterface data;
     private final BlockPos pos;
 
+    private EditBox netId;
     private EditBox targetPos;
     private boolean targetError;
     private boolean changedTarget;
 
+    private int changeCooldown;
     private TextAndImageButton sendButton;
     private int sendCooldown;
     private TextAndImageButton setButton;
@@ -95,6 +98,14 @@ public class Artillery_CoordinatorScreen extends Screen {
         targetPos.setSuggestion("_");
         targetPos.setBordered(false);
         targetPos.setValue(data.getTargetPos());
+
+        if(data.allowIdChange()) {
+            netId = addRenderableWidget(new EditBox(FONT, leftBound + 32, topBound + 66, 176, 8, TARGET_POS));
+            netId.setMaxLength(5);
+            netId.setSuggestion("_");
+            netId.setBordered(false);
+            netId.setValue(data.getNetworkId());
+        }
 
         sendButton = addRenderableWidget(TextAndImageButton.builder(SEND, getButton(sendCooldown),this::send).build());
         sendButton.setPosition(leftBound + 8,topBound + 26);
@@ -152,7 +163,11 @@ public class Artillery_CoordinatorScreen extends Screen {
 
         fireButton.renderTexture(pGuiGraphics, getButton(fireCooldown),leftBound + 128,topBound + 66, 0, 0, 0, 56, 16, 56, 16 );
 
-        pGuiGraphics.drawString(FONT, ID.getString() + data.getNetworkId(), leftBound + 8, topBound + 66, 16777215, false);
+        if(data.allowIdChange()) {
+            pGuiGraphics.drawString(FONT, ID.getString(), leftBound + 8, topBound + 66, 16777215, false);
+        } else {
+            pGuiGraphics.drawString(FONT, ID.getString() + data.getNetworkId(), leftBound + 8, topBound + 66, 16777215, false);
+        }
         pGuiGraphics.drawString(FONT, NUM_CAN.getString() + ("" + data.getNumCannons()), leftBound + 68, topBound + 66, 16777215, false);
         pGuiGraphics.drawString(FONT, NUM_DIR.getString() + ("" + data.getNumDirector()), leftBound + 8, topBound + 74, 16777215, false);
         pGuiGraphics.drawString(FONT, READY_CAN.getString() + ("" + data.getNumReadyCannons()), leftBound + 68, topBound + 74, 16777215, false);
@@ -177,11 +192,12 @@ public class Artillery_CoordinatorScreen extends Screen {
 
 
     private void check() {
-        if(targetPos.getValue().isEmpty()) {
-            targetError = false;
-        } else {
-            targetError = !Utils.posFromString(targetPos.getValue(), new int[3]);
-        }
+            changeCooldown = 5;
+            if (targetPos.getValue().isEmpty()) {
+                targetError = false;
+            } else {
+                targetError = !Utils.posFromString(targetPos.getValue(), new int[3]);
+            }
     }
 
     public void tick() {
@@ -193,6 +209,21 @@ public class Artillery_CoordinatorScreen extends Screen {
         if(ticks == 20) {
             ticks = 0;
             check();
+        }
+        if (data.allowIdChange()) {
+            String value = netId.getValue();
+            if (!data.getNetworkId().equals(value)) {
+                if(value.length() == 5) {
+                    netId.setTextColor(16777215);
+                    CompoundTag tag = new CompoundTag();
+                    tag.putString("network_id", data.getNetworkId());
+                    tag.putString("new_network_id", value);
+                    data.update(tag);
+                    setNetId();
+                } else {
+                    netId.setTextColor(16007990);
+                }
+            }
         }
         super.tick();
     }
@@ -236,6 +267,10 @@ public class Artillery_CoordinatorScreen extends Screen {
             fireCooldown = 5;
             ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(pos, (byte)3, "nothing"));
         }
+    }
+
+    public void setNetId() {
+        ModMessages.sendToServer(new SendArtilleryNetworkInstructionC2SPacket(pos, (byte) 4, netId.getValue()));
     }
 
     private ResourceLocation getButton(int ticks) {

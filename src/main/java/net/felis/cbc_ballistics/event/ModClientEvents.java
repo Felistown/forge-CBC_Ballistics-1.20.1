@@ -1,6 +1,7 @@
 package net.felis.cbc_ballistics.event;
 
 import net.felis.cbc_ballistics.CBC_Ballistics;
+import net.felis.cbc_ballistics.entity.model.RadioModel;
 import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.item.custom.RadioItem;
 import net.felis.cbc_ballistics.item.custom.RangefinderItem;
@@ -21,7 +22,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-
 public class ModClientEvents {
 
     private boolean isScoped;
@@ -80,11 +80,6 @@ public class ModClientEvents {
         }
     }
 
-    @SubscribeEvent
-    public static void onKeyRegister(RegisterKeyMappingsEvent event) {
-        event.register(KeyBinding.OPEN_RADIO_KEY);
-    }
-
     @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, value = Dist.CLIENT)
     public static class ClientForgeEvents {
 
@@ -115,6 +110,20 @@ public class ModClientEvents {
                     radio.openRadio(chestplate);
                 }
             }
+        }
+    }
+
+    @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ClientModBusEvents {
+
+        @SubscribeEvent
+        public static void onKeyRegister(RegisterKeyMappingsEvent event) {
+            event.register(KeyBinding.OPEN_RADIO_KEY);
+        }
+
+        @SubscribeEvent
+        public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
+            event.registerLayerDefinition(RadioModel.LAYER_LOCATION, RadioModel::createBodyLayer);
         }
     }
 }

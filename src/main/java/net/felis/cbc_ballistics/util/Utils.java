@@ -190,4 +190,25 @@ public class Utils {
             default -> 0;
         };
     }
+
+    public static Vec3 orthog(Vec3 p) {
+        byte smallestPos;
+        if(p.x < p.y && p.x < p.z) {
+            smallestPos = 0;
+        } else if(p.y < p.x && p.y < p.z) {
+            smallestPos = 1;
+        } else {
+            smallestPos = 2;
+        }
+        switch (smallestPos) {
+            case 0:
+                return new Vec3(0, -p.z, p.y);
+
+            case 1:
+                return new Vec3(-p.z, 0, p.x);
+            default:
+                return new Vec3(-p.y, p.x, 0);
+
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package net.felis.cbc_ballistics.util;
 
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.*;
 import net.minecraft.world.level.Level;
@@ -38,12 +39,16 @@ public class ParticleHelper {
     }
 
     public static void Circle(Level level, Vec3 pos, Colour colour, float radius, float yaw, float pitch, float size) {
-         dot(level, pos, colour, size);
-         //TO DO
-
-
-
-        //
+        DustParticleOptions dust = colour.toDust(size);
+        Vec3 nor = new Vec3(Utils.vecToVel(-pitch, yaw, 1));
+        Vec3 orth1 = Utils.orthog(nor);
+        Vec3 orth2 = new Vec3(nor.toVector3f().cross(orth1.toVector3f()));
+        for(float i = 0; i < 2 * Math.PI; i += FREQ / radius) {
+            float x = (float)(pos.x + radius * Math.cos(i) * orth1.x + radius * Math.sin(i) * orth2.x);
+            float y = (float)(pos.y + radius * Math.cos(i) * orth1.y + radius * Math.sin(i) * orth2.y);
+            float z = (float)(pos.z + radius * Math.cos(i) * orth1.z + radius * Math.sin(i) * orth2.z);
+            level.addParticle(dust, true, x, y, z, 0,0,0);
+        }
     }
 
     public enum Colour {

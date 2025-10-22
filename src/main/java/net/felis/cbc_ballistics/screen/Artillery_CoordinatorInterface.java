@@ -47,6 +47,10 @@ public class Artillery_CoordinatorInterface {
         this.tags = tags;
     }
 
+    public void allowIdChange(boolean val) {
+        tags.putBoolean("allow_id_change", val);
+    }
+
     public CompoundTag getTags() {
         return tags.copy();
     }
@@ -85,6 +89,10 @@ public class Artillery_CoordinatorInterface {
 
     public byte getNumSubnets() {
         return tags.getByte("subnet");
+    }
+
+    public boolean allowIdChange() {
+        return tags.getBoolean("allow_id_change");
     }
 
     public byte getNumCannons() {
@@ -138,6 +146,10 @@ public class Artillery_CoordinatorInterface {
         if(tags.getString("network_id").equals(this.tags.getString("network_id"))) {
             System.out.println("successfuly updated tags ------");
             this.tags.merge(tags);
+            if(this.tags.contains("new_network_id")) {
+                this.tags.putString("network_id", tags.getString("new_network_id"));
+                this.tags.remove("new_network_id");
+            }
             return true;
         }
         return false;

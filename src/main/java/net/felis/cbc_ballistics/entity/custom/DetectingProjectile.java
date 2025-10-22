@@ -3,6 +3,7 @@ package net.felis.cbc_ballistics.entity.custom;
 
 import net.felis.cbc_ballistics.config.CBC_BallisticsCommonConfigs;
 import net.felis.cbc_ballistics.entity.ModEntities;
+import net.felis.cbc_ballistics.util.ParticleHelper;
 import net.felis.cbc_ballistics.util.Utils;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -48,10 +49,11 @@ public class DetectingProjectile extends Projectile {
 
     @Override
     protected void onHit(HitResult pResult) {
-        Vec3 loc = pResult.getLocation();
         Vec3 pos = position();
-        distanceTravelled += Utils.distFrom(loc, pos);
-        angle_of_attack = getXRot() % 90;
+        move();
+        Vec3 next = position();
+        distanceTravelled += Utils.distFrom(pos, pResult.getLocation());
+        angle_of_attack = -(float)Math.toDegrees(Math.atan((next.y - pos.y) / Math.sqrt(Math.pow(next.x - pos.x, 2) + Math.pow(next.z - pos.z, 2))));
         super.onHit(pResult);
     }
 
@@ -107,18 +109,16 @@ public class DetectingProjectile extends Projectile {
                 return true;
             }
         }
-        Vec3 vel = this.getDeltaMovement();
-        distanceTravelled += vel.length();
-        double xVel = vel.x;
-        double yVel = vel.y;
-        double zVel = vel.z;
-        double xPos = this.getX() + xVel;
-        double yPos = this.getY() + yVel;
-        double zPos = this.getZ() + zVel;
-        this.setDeltaMovement(xVel * drag, yVel * drag - grav, zVel * drag);
-        this.setPos(xPos, yPos, zPos);
+        move();
         this.checkInsideBlocks();
         return false;
+    }
+
+    public void move() {
+        Vec3 vel = this.getDeltaMovement();
+        distanceTravelled += vel.length();
+        this.setPos(getX() + vel.x,getY() + vel.y, getZ() + vel.z);
+        this.setDeltaMovement(vel.x * drag, vel.y * drag - grav, vel.z * drag);
     }
 
     public static class Detect {

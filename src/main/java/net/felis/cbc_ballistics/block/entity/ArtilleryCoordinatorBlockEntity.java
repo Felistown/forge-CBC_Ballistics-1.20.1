@@ -257,6 +257,13 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         return network_id;
     }
 
+    public void setNetwork_id(String network_id) {
+        CompoundTag tag = Utils.tagOf(this);
+        this.network_id = network_id.substring(0, 5);
+        tag.putString("new_network_id", network_id);
+        ModMessages.sendToDimension(new UpdateArtilleryNetDataS2CPacket(tag), level);
+    }
+
     public ArrayList<Director> getDirectors() {
         return directors;
     }
@@ -554,8 +561,8 @@ public class ArtilleryCoordinatorBlockEntity extends BlockEntity implements Netw
         }
     }
 
-    public void openScreen(Player player) {
-        ModMessages.sendToPlayer(new OpenCoordinatorS2CPacket(this), (ServerPlayer) player);
+    public void openScreen(Player player, boolean allowIdChange) {
+        ModMessages.sendToPlayer(new OpenCoordinatorS2CPacket(this, allowIdChange), (ServerPlayer) player);
     }
 
 

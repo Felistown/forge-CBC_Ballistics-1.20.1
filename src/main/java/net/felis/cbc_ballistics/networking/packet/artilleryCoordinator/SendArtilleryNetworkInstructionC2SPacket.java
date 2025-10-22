@@ -19,6 +19,7 @@ public class SendArtilleryNetworkInstructionC2SPacket {
      1 : set
      2 : mode
      3 : fire
+     4 : change id
      */
     private String value;
     private BlockPos pos;
@@ -60,6 +61,9 @@ public class SendArtilleryNetworkInstructionC2SPacket {
                             break;
                         case 3:
                             block.fire();
+                            break;
+                        case 4:
+                            block.setNetwork_id(value);
                             break;
                     }
             }

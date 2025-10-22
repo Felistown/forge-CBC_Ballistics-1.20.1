@@ -37,7 +37,7 @@ public class OpenCoordinatorC2SPacket {
             ServerLevel level = (ServerLevel)player.level();
             BlockEntity blockS = level.getBlockEntity(pos);
             if(blockS instanceof ArtilleryCoordinatorBlockEntity block && block.getNetwork_id().equals(network_id)) {
-                ModMessages.sendToPlayer(new OpenCoordinatorS2CPacket(block), player);
+                ModMessages.sendToPlayer(new OpenCoordinatorS2CPacket(block, false), player);
             }
         });
         return true;

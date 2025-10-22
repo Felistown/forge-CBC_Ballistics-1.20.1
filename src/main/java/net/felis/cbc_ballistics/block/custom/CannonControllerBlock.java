@@ -86,6 +86,5 @@ public class CannonControllerBlock extends DirectionalKineticBlock implements IB
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
         return AllShapes.CASING_14PX.get(pState.getValue(FACING));
-
     }
 }

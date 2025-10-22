@@ -95,7 +95,7 @@ public class FiringSolutions {
             AIR_TIME = tag.getFloat("air_time");
             CHARGES = tag.getByte("charges");
             ANGLE_OF_ATTACK = tag.getFloat("angle_of_attack");
-            HIT_POS = new Vec3(tag.getDouble("x"), tag.getDouble("y"), tag.getDouble("z"));
+            HIT_POS = new Vec3(tag.getFloat("x"), tag.getFloat("y"), tag.getFloat("z"));
             TYPE = Type.of(tag.getBoolean("state"));
             this.YAW = FiringSolutions.this.YAW;
         }
@@ -109,9 +109,9 @@ public class FiringSolutions {
             tag.putByte("charges", CHARGES);
             tag.putBoolean("state", TYPE.BOOL);
             tag.putFloat("angle_of_attack", ANGLE_OF_ATTACK);
-            tag.putDouble("x", HIT_POS.x);
-            tag.putDouble("y", HIT_POS.y);
-            tag.putDouble("z", HIT_POS.z);
+            tag.putFloat("x", (float)HIT_POS.x);
+            tag.putFloat("y", (float)HIT_POS.y);
+            tag.putFloat("z", (float)HIT_POS.z);
             return tag;
         }
 

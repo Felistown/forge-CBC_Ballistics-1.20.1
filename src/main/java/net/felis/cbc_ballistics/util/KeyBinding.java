@@ -13,7 +13,7 @@ public class KeyBinding {
             KEY_OPEN_RADIO,
             KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_F,
+            GLFW.GLFW_KEY_R,
             KEY_CATEGORY_CBC_BALLISTICS
     );
 }

@@ -67,13 +67,8 @@ public class ArtilleryCoordinatorBlock extends BaseEntityBlock {
                 if (pLevel.isClientSide) {
                     return InteractionResult.SUCCESS;
                 } else {
-                    ItemStack item = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
-                    if (item.getItem() == ModItems.RANGEFINDER.get() && item.getTag() != null) {
-                        block.setTargetPos(item.getTag().getString("results"));
-                        System.out.println("targetpos block item = " + item.getTag().getString("results"));
-                    }
                     //System.out.println("targetpos block = " + Utils.formatPos(block.getTargetPos()));
-                    block.openScreen(pPlayer);
+                    block.openScreen(pPlayer, true);
                 }
             }
         }
