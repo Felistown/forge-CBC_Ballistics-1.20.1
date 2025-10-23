@@ -84,6 +84,7 @@ public class RangefinderItem extends Item implements IHaveData {
         return Component.literal(item.getTag().getString("results"));
     }
 
+
     public void rangeFind(ItemStack item) {
         item.setTag(new CompoundTag());
         Minecraft instance = Minecraft.getInstance();

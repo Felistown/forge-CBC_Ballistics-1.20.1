@@ -6,12 +6,14 @@ import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.OpenCoordinatorC2SPacket;
 import net.felis.cbc_ballistics.networking.packet.radio.SendRadioDataC2SPacket;
 import net.felis.cbc_ballistics.screen.Artillery_CoordinatorInterface;
+import net.felis.cbc_ballistics.util.KeyBinding;
 import net.felis.cbc_ballistics.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -22,6 +24,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
@@ -29,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -50,11 +54,14 @@ public class RadioItem extends ArmorItem {
     public InteractionResult useOn(UseOnContext pContext) {
         Level level = pContext.getLevel();
         if(pContext.getHand() == InteractionHand.MAIN_HAND && !level.isClientSide) {
+            CompoundTag itemTag = pContext.getItemInHand().getOrCreateTag();
             if (level.getBlockEntity(pContext.getClickedPos()) instanceof ArtilleryCoordinatorBlockEntity network) {
                 CompoundTag tag = new CompoundTag();
                 tag.putIntArray("pos", Utils.blockPosToArray(network.getBlockPos()));
                 tag.putString("network_id", network.getNetwork_id());
-                pContext.getItemInHand().getOrCreateTag().put("network", tag);
+                itemTag.put("network", tag);
+            } else {
+                itemTag.remove("network");
             }
         }
         return super.useOn(pContext);
@@ -125,5 +132,16 @@ public class RadioItem extends ArmorItem {
     @Override
     public @Nullable String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
         return "cbc_ballistics:textures/item/radio.png";
+    }
+
+    @Override
+    public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
+        pTooltipComponents.add(Component.translatable("item.cbc_ballistics.radio_item.key_bind1").append(KeyBinding.OPEN_RADIO_KEY.getKey().getDisplayName()).append(Component.translatable("item.cbc_ballistics.radio_item.key_bind2")));
+        CompoundTag tags = pStack.getOrCreateTag();
+        if(tags.contains("network")) {
+            CompoundTag net = tags.getCompound("network");
+            pTooltipComponents.add(Component.translatable("unit.cbc_ballistics.artillery_network.network").append(net.getString("network_id")).append(Component.translatable("unit.cbc_ballistics.artillery_network.at")).append(Utils.formatPos(net.getIntArray("pos"))));
+        }
+        super.appendHoverText(pStack, pLevel, pTooltipComponents, pIsAdvanced);
     }
 }

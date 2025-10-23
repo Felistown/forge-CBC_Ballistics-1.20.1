@@ -27,12 +27,12 @@ public class RadioModel<T extends Entity> extends EntityModel<T> {
 		MeshDefinition meshdefinition = new MeshDefinition();
 		PartDefinition partdefinition = meshdefinition.getRoot();
 
-        PartDefinition body = partdefinition.addOrReplaceChild("Body", CubeListBuilder.create().texOffs(0, 0).addBox(-3.0F, 0.0F, 2.0F, 6.0F, 9.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(24, 0).addBox(-2.0F, -11.0F, 3.0F, 1.0F, 10.0F, 1.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 12).addBox(-3.0F, -1.0F, 2.0F, 6.0F, 1.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(18, 0).addBox(3.0F, 1.0F, 2.0F, 1.0F, 6.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 24.0F, 0.0F));
+        PartDefinition body = partdefinition.addOrReplaceChild("Body", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, 0.0F, 2.0F, 8.0F, 9.0F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(26, 0).addBox(-2.0F, -21.0F, 3.0F, 1.0F, 20.0F, 1.0F, new CubeDeformation(0.0F))
+                .texOffs(0, 13).addBox(-4.0F, -1.0F, 2.0F, 8.0F, 1.0F, 3.0F, new CubeDeformation(0.0F))
+                .texOffs(20, 13).addBox(4.0F, 1.0F, 3.0F, 1.0F, 6.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 24.0F, 0.0F));
 
-		return LayerDefinition.create(meshdefinition, 28, 15);
+		return LayerDefinition.create(meshdefinition, 30, 21);
 	}
 
 	@Override

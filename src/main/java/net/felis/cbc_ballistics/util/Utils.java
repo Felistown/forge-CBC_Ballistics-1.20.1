@@ -192,23 +192,16 @@ public class Utils {
     }
 
     public static Vec3 orthog(Vec3 p) {
-        byte smallestPos;
-        if(p.x < p.y && p.x < p.z) {
-            smallestPos = 0;
-        } else if(p.y < p.x && p.y < p.z) {
-            smallestPos = 1;
+        if (p.x > p.z && p.x > p.y) {
+            Vec3 vec = new Vec3(0, -p.z, p.y);
+            return vec.scale(1 / vec.length());
+        } else if(p.y > p.z) {
+            Vec3 vec = new Vec3(-p.z, 0, p.x);;
+            return vec.scale(1 / vec.length());
         } else {
-            smallestPos = 2;
+            Vec3 vec = new Vec3(-p.y, p.x, 0);
+            return vec.scale(1 / vec.length());
         }
-        switch (smallestPos) {
-            case 0:
-                return new Vec3(0, -p.z, p.y);
 
-            case 1:
-                return new Vec3(-p.z, 0, p.x);
-            default:
-                return new Vec3(-p.y, p.x, 0);
-
-        }
     }
 }

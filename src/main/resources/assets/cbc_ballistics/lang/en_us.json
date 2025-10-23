@@ -2,6 +2,7 @@
   "item.cbc_ballistics.rangefinder" : "Rangefinder",
   "item.cbc_ballistics.ballistics_wand" : "Ballistics debug wand",
   "item.cbc_ballistics.network_manager": "Artillery Network Manager",
+  "item.cbc_ballistics.radio_item": "Radio Set",
   "block.cbc_ballistics.ballistic_calculator": "Ballistic Calculator",
   "block.cbc_ballistics.cannon_control": "Cannon controller",
   "block.cbc_ballistics.ballistic_calculator.cannonPos": "Cannon X, Y and Z",
@@ -68,5 +69,8 @@
   "block.cbc_ballistics.artillery_network.dis": "Accurate",
   "block.cbc_ballistics.artillery_network.median": "Medians",
   "unit.cbc_ballistics.artillery_network.super_short": "Subnet of:",
-  "unit.cbc_ballistics.artillery_network.sub_short": "Subnets = "
+  "unit.cbc_ballistics.artillery_network.sub_short": "Subnets = ",
+  "item.cbc_ballistics.radio_item.key_bind1": "Press §e",
+  "item.cbc_ballistics.radio_item.key_bind2": "§r to open interface",
+  "item.cbc_ballistics.radio_item.empty" : "No network found"
 }

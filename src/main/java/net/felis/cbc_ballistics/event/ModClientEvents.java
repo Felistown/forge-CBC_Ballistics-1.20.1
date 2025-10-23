@@ -5,14 +5,14 @@ import net.felis.cbc_ballistics.entity.model.RadioModel;
 import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.item.custom.RadioItem;
 import net.felis.cbc_ballistics.item.custom.RangefinderItem;
-import net.felis.cbc_ballistics.util.IHaveData;
 import net.felis.cbc_ballistics.util.KeyBinding;
+import net.felis.cbc_ballistics.util.ScreenDisplay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -24,6 +24,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ModClientEvents {
 
+    public static final ScreenDisplay SCREEN = new ScreenDisplay();
     private boolean isScoped;
     private boolean normalise;
     private double sensitivity;
@@ -55,8 +56,8 @@ public class ModClientEvents {
 
     @SubscribeEvent
     public void renderRangefinder(RenderGuiOverlayEvent event) {
+        GuiGraphics graphics = event.getGuiGraphics();
         if(isScoped) {
-            GuiGraphics graphics = event.getGuiGraphics();
             int screenWidth = graphics.guiWidth();
             int screenHeight = graphics.guiHeight();
             float f = (float)Math.min(screenWidth, screenHeight);
@@ -71,13 +72,7 @@ public class ModClientEvents {
             graphics.fill(RenderType.guiOverlay(), 0, l, k, j1, -90, -16777216);
             graphics.fill(RenderType.guiOverlay(), i1, l, screenWidth, j1, -90, -16777216);
         }
-        ItemStack item = Minecraft.getInstance().player.getItemInHand(InteractionHand.MAIN_HAND);
-        if(item.getItem() instanceof IHaveData) {
-            GuiGraphics graphics = event.getGuiGraphics();
-            int x = graphics.guiWidth() / 2;
-            int y = (int)(graphics.guiHeight() * 0.75);
-            graphics.drawCenteredString(Minecraft.getInstance().font, ((IHaveData)item.getItem()).getComponent(item), x, y, 16777215);
-        }
+        SCREEN.display(graphics);
     }
 
     @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, value = Dist.CLIENT)
@@ -107,7 +102,11 @@ public class ModClientEvents {
                 System.out.println("key output");
                 ItemStack chestplate = player.getInventory().armor.get(2);
                 if(chestplate.getItem() instanceof RadioItem radio) {
-                    radio.openRadio(chestplate);
+                    if(chestplate.getOrCreateTag().contains("network")) {
+                        radio.openRadio(chestplate);
+                    } else {
+                        ModClientEvents.SCREEN.add(Component.translatable("item.cbc_ballistics.radio_item.empty"), 6000);
+                    }
                 }
             }
         }

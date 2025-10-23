@@ -122,7 +122,6 @@ public class Artillery_CoordinatorInterface {
                 pres[i] = s.PRECISION;
                 disp[i] = s.DISPERSION;
                 tTT[i] = s.AIR_TIME;
-
         }
         /*  precision
             dispersion
