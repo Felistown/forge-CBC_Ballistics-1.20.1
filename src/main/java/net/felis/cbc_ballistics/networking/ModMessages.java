@@ -94,27 +94,27 @@ public class ModMessages {
                 .add();
     }
     public static <MSG> void sendToServer(MSG message) {
-        System.out.println("sent to server");
+        //System.out.println("sent to server");
         INSTANCE.sendToServer(message);
     }
 
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
-        System.out.println("sent to player");
+        //System.out.println("sent to player");
         INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), message);
     }
 
     public static <MSG> void sendToPlayersRad(MSG message, PacketDistributor.TargetPoint point) {
-        System.out.println("sent to players in radius");
+        //System.out.println("sent to players in radius");
         INSTANCE.send(PacketDistributor.NEAR.with(() ->  point), message);
     }
 
     public static <MSG> void sendToDimension(MSG message, Level level) {
-        System.out.println("sent to player in dimension " + level.dimension().toString());
+        //System.out.println("sent to player in dimension " + level.dimension().toString());
         INSTANCE.send(PacketDistributor.DIMENSION.with(level::dimension), message);
     }
 
     public static <MSG> void sendToAll(MSG message) {
-        System.out.println("sent to all players");
+        //System.out.println("sent to all players");
         INSTANCE.send(PacketDistributor.ALL.noArg(), message);
     }
 }
