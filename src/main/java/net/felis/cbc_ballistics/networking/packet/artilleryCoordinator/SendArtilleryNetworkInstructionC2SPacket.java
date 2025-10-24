@@ -25,7 +25,6 @@ public class SendArtilleryNetworkInstructionC2SPacket {
     private BlockPos pos;
 
     public SendArtilleryNetworkInstructionC2SPacket(BlockPos pos, byte instruction, String value) {
-        System.out.println("sent instruction");
         this.pos = pos;
         this.instruction = instruction;
         this.value = value;

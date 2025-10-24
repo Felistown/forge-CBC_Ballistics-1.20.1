@@ -2,6 +2,7 @@ package net.felis.cbc_ballistics.item.custom;
 
 import net.felis.cbc_ballistics.block.entity.ArtilleryCoordinatorBlockEntity;
 import net.felis.cbc_ballistics.entity.model.RadioModel;
+import net.felis.cbc_ballistics.item.RadioMaterial;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.felis.cbc_ballistics.networking.packet.artilleryCoordinator.OpenCoordinatorC2SPacket;
 import net.felis.cbc_ballistics.networking.packet.radio.SendRadioDataC2SPacket;
@@ -21,10 +22,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterials;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
@@ -41,7 +39,7 @@ public class RadioItem extends ArmorItem {
     private byte cooldown;
     
     public RadioItem(Properties pProperties) {
-        super(ArmorMaterials.IRON, Type.CHESTPLATE, pProperties);
+        super(new RadioMaterial(), Type.CHESTPLATE, pProperties);
         cooldown = 0;
     }
 
@@ -87,9 +85,13 @@ public class RadioItem extends ArmorItem {
         if(!isFoil(stack)) {
             return;
         }
-        CompoundTag tag = stack.getTag().getCompound("network");
-        BlockPos pos = Utils.arrayToBlockPos(tag.getIntArray("pos"));
-        ModMessages.sendToServer(new SendRadioDataC2SPacket(target, tag.getString("network_id"), pos));
+        CompoundTag tag = stack.getTag();
+        if(tag.contains("network")) {
+            tag.putString("target", target);
+            tag = tag.getCompound("network");
+            BlockPos pos = Utils.arrayToBlockPos(tag.getIntArray("pos"));
+            ModMessages.sendToServer(new SendRadioDataC2SPacket(target, tag.getString("network_id"), pos));
+        }
     }
     
     public void receiveData(ItemStack stack, CompoundTag tag) {
@@ -103,7 +105,8 @@ public class RadioItem extends ArmorItem {
             if (cooldown <= 0) {
                 cooldown = 5;
                 CompoundTag tags = stack.getOrCreateTag();
-                if (player.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof RangefinderItem && tags.contains("network_data")) {
+                ItemStack pStack = player.getItemInHand(InteractionHand.MAIN_HAND);
+                if (pStack.getItem() instanceof RangefinderItem && pStack.getOrCreateTag().getString("results").equals(tags.getString("target")) && tags.contains("network_data")) {
                     new Artillery_CoordinatorInterface(tags.getCompound("network_data")).renderSolutions(level);
                 }
             }
@@ -127,6 +130,11 @@ public class RadioItem extends ArmorItem {
                 return armourModel;
             }
         });
+    }
+
+    @Override
+    public boolean isRepairable(ItemStack stack) {
+        return super.isRepairable(stack);
     }
 
     @Override

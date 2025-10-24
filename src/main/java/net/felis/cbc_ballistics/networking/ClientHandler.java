@@ -24,15 +24,6 @@ import net.minecraftforge.fml.DistExecutor;
 
 public class ClientHandler {
 
-    public static void sendReadyCannons(BlockPos pos, int numReady) {
-        Entity player = Minecraft.getInstance().player;
-        Level level = player.level();
-        BlockEntity blockS = level.getBlockEntity(pos);
-        if (blockS instanceof ArtilleryCoordinatorBlockEntity block) {
-            block.getPersistentData().putInt("readies", numReady);
-        }
-    }
-
     public static void SyncArtilleryNet(BlockPos pos, CompoundTag tags) {
         Player player = Minecraft.getInstance().player;
         Level level = player.level();
@@ -92,16 +83,9 @@ public class ClientHandler {
     }
 
     public static void sendSolutions(FiringSolutions solutions, BlockPos pos) {
-        try {
-            Level level = Minecraft.getInstance().level;
-            System.out.println("recieved");
-            if (level.getBlockEntity(pos) instanceof CalculatorBlockEntity be) {
-                System.out.println("setSoltuion");
-                be.setSolutions(solutions);
-            }
-        } catch (Exception e) {
-            System.out.println("-----------");
-            System.out.println(e.toString());
+        Level level = Minecraft.getInstance().level;
+        if (level.getBlockEntity(pos) instanceof CalculatorBlockEntity be) {
+            be.setSolutions(solutions);
         }
     }
 
@@ -111,9 +95,6 @@ public class ClientHandler {
     }
 
     public static void updateNetworkData(CompoundTag tags) {
-        for(String key: tags.getAllKeys()) {
-            System.out.println("net data: " + key + " of " + tags.get(key).toString());
-        }
         Artillery_CoordinatorInterface.CLIENT_DATA.update(tags);
     }
     

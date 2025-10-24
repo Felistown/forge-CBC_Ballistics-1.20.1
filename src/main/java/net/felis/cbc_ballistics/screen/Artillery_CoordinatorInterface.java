@@ -141,9 +141,7 @@ public class Artillery_CoordinatorInterface {
     }
 
     public boolean update(CompoundTag tags) {
-        System.out.println("updating tags ------");
         if(tags.getString("network_id").equals(this.tags.getString("network_id"))) {
-            System.out.println("successfuly updated tags ------");
             this.tags.merge(tags);
             if(this.tags.contains("new_network_id")) {
                 this.tags.putString("network_id", tags.getString("new_network_id"));

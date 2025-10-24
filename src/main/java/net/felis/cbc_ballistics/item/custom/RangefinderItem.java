@@ -22,6 +22,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.targets.CommonLaunchHandler;
 import net.minecraftforge.fml.loading.targets.FMLClientDevLaunchHandler;
 import net.minecraftforge.network.PacketDistributor;
@@ -85,12 +87,11 @@ public class RangefinderItem extends Item implements IHaveData {
     }
 
 
-    public void rangeFind(ItemStack item) {
+    public void rangeFind(ItemStack item, Player player) {
         item.setTag(new CompoundTag());
-        Minecraft instance = Minecraft.getInstance();
-        Player player = instance.player;
+        Level level = player.level();
         Vec3 playerPos = new Vec3(player.getX(), player.getEyeY() - Float.MIN_VALUE, player.getZ());
-        HitResult result = new DetectingProjectile.Detect(instance.level, playerPos)
+        HitResult result = new DetectingProjectile.Detect(level, playerPos)
                 .range(CBC_BallisticsCommonConfigs.RANGEFINDER_MAX_RANGE.get())
                 .simulate(player.getXRot(), player.getYRot(), 10f)
                 .getResults();
@@ -101,13 +102,12 @@ public class RangefinderItem extends Item implements IHaveData {
             if(result instanceof BlockHitResult bh) {
                 BlockPos blockPos = bh.getBlockPos();
                 pos = new Vec3(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-                hitPos = bh.getLocation();
-                //bh.getBlockPos();
+                hitPos = bh.getBlockPos().getCenter();
             } else if(result instanceof EntityHitResult eh){
                 pos = eh.getEntity().getBoundingBox().getCenter();
                 hitPos = pos;
             }
-            ParticleHelper.line(instance.level, playerPos, hitPos, ParticleHelper.Colour.RED, 0.5f);
+            ParticleHelper.line(level, playerPos, hitPos, ParticleHelper.Colour.RED, 0.5f);
             String target = Utils.formatPos(pos);
             item.getTag().putString("results", target);
             ItemStack stack = player.getInventory().getArmor(2);

@@ -1,7 +1,8 @@
 {
 	"texture_size": [30, 21],
 	"textures": {
-		"1": "cbc_ballistics:item/radio"
+		"1": "cbc_ballistics:item/radio",
+        "particle": "cbc_ballistics:block/cbc_casing"
 	},
 	"elements": [
 		{

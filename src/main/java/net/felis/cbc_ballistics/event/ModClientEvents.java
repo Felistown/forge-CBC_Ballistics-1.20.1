@@ -19,12 +19,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ModClientEvents {
 
-    public static final ScreenDisplay SCREEN = new ScreenDisplay();
+    public static ScreenDisplay SCREEN;
     private boolean isScoped;
     private boolean normalise;
     private double sensitivity;
@@ -33,6 +34,9 @@ public class ModClientEvents {
         isScoped = false;
         normalise = false;
         sensitivity = 100;
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            SCREEN = new ScreenDisplay();
+        });
     }
 
     @SubscribeEvent
@@ -72,7 +76,9 @@ public class ModClientEvents {
             graphics.fill(RenderType.guiOverlay(), 0, l, k, j1, -90, -16777216);
             graphics.fill(RenderType.guiOverlay(), i1, l, screenWidth, j1, -90, -16777216);
         }
-        SCREEN.display(graphics);
+        if(SCREEN != null) {
+            SCREEN.display(graphics);
+        }
     }
 
     @Mod.EventBusSubscriber(modid = CBC_Ballistics.MODID, value = Dist.CLIENT)
@@ -89,7 +95,7 @@ public class ModClientEvents {
                     ItemStack thing = player.getUseItem();
                     Item item = thing.getItem();
                     if (item instanceof RangefinderItem rangefinder) {
-                        rangefinder.rangeFind(thing);
+                        rangefinder.rangeFind(thing, player);
                     }
                 }
             }
@@ -99,7 +105,6 @@ public class ModClientEvents {
         public static void onKeyInputKey(InputEvent.Key event) {
             Player player = Minecraft.getInstance().player;
             if(KeyBinding.OPEN_RADIO_KEY.consumeClick()) {
-                System.out.println("key output");
                 ItemStack chestplate = player.getInventory().armor.get(2);
                 if(chestplate.getItem() instanceof RadioItem radio) {
                     if(chestplate.getOrCreateTag().contains("network")) {

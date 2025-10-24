@@ -14,7 +14,6 @@ public class sendSolutionsS2CPacket {
     private FiringSolutions solutions;
 
     public sendSolutionsS2CPacket(BlockPos pos, FiringSolutions solutions) {
-        System.out.println("sending...");
         this.pos = pos;
         this.solutions = solutions;
     }

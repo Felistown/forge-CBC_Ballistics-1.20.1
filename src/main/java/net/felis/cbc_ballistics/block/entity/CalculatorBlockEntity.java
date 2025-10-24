@@ -90,7 +90,6 @@ public class CalculatorBlockEntity extends BlockEntity implements MenuProvider, 
 
     public void calculate() {
         if(!level.isClientSide) {
-            System.out.println("calculating");
             Cannon myCannon = new Cannon.Builder(level)
                     .at(Utils.arrayToBlockPos(cPos))
                     .grav(grav)
