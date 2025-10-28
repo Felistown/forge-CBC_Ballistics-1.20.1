@@ -10,6 +10,8 @@ import net.felis.cbc_ballistics.item.ModCreativeModTabs;
 import net.felis.cbc_ballistics.item.ModItems;
 import net.felis.cbc_ballistics.networking.ModMessages;
 import net.minecraft.client.renderer.entity.*;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -91,9 +93,13 @@ public class CBC_Ballistics
     public static class ClientModEvents
     {
         @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event)
-        {
+        public static void onClientSetup(FMLClientSetupEvent event) {
             EntityRenderers.register(ModEntities.DETECTING_PROJECTILE.get(), NoopRenderer::new);
+
+
         }
+
+
+
     }
 }

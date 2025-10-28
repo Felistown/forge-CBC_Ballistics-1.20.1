@@ -92,6 +92,11 @@ public class ModMessages {
                 .encoder(RecieveRadioDateS2CPacket::toBytes)
                 .consumerMainThread(RecieveRadioDateS2CPacket::handle)
                 .add();
+        INSTANCE.messageBuilder(SendRangeFinderC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SendRangeFinderC2SPacket::new)
+                .encoder(SendRangeFinderC2SPacket::toBytes)
+                .consumerMainThread(SendRangeFinderC2SPacket::handle)
+                .add();
     }
     public static <MSG> void sendToServer(MSG message) {
         //System.out.println("sent to server");

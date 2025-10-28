@@ -1,14 +1,17 @@
 package net.felis.cbc_ballistics.item.custom;
 
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.projectile.Projectile;
+import com.google.common.collect.Multimap;
+import net.felis.cbc_ballistics.networking.ModMessages;
+import net.felis.cbc_ballistics.networking.packet.SendRangeFinderC2SPacket;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.phys.*;
 import net.felis.cbc_ballistics.config.CBC_BallisticsCommonConfigs;
 import net.felis.cbc_ballistics.entity.custom.DetectingProjectile;
 import net.felis.cbc_ballistics.util.IHaveData;
 import net.felis.cbc_ballistics.util.ParticleHelper;
 import net.felis.cbc_ballistics.util.Utils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -22,11 +25,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.loading.targets.CommonLaunchHandler;
-import net.minecraftforge.fml.loading.targets.FMLClientDevLaunchHandler;
-import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -38,12 +36,18 @@ public class RangefinderItem extends Item implements IHaveData {
         super(pProperties);
     }
 
+
     public int getUseDuration(ItemStack pStack) {
         return 1200;
     }
 
     public UseAnim getUseAnimation(ItemStack pStack) {
         return UseAnim.SPYGLASS;
+    }
+
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlot slot, ItemStack stack) {
+        return super.getAttributeModifiers(slot, stack);
     }
 
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
@@ -116,6 +120,9 @@ public class RangefinderItem extends Item implements IHaveData {
             }
         } else {
             item.getTag().putString("results", "Too far");
+        }
+        if(level.isClientSide) {
+            ModMessages.sendToServer(new SendRangeFinderC2SPacket(item));
         }
     }
 }

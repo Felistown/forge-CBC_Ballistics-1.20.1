@@ -67,7 +67,10 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
                 PitchOrientedContraptionEntity mount = cannon.getContraption();
                 if(mount != null) {
                     targetPitch = mount.pitch;
-                    targetYaw = mount.yaw;
+                    targetYaw = Math.abs(mount.yaw) % 360;
+                    if(targetYaw > 180) {
+                        targetYaw -= 360;
+                    }
                 }
             }
         }
@@ -90,10 +93,14 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
                     float speed = Math.abs(getTheoreticalSpeed() * 0.04f);
                     boolean changed = false;
                     float pitch = mount.pitch * Math.signum(mount.getInitialOrientation().getStepX() -   mount.getInitialOrientation().getStepZ());
+                    float yaw = (mount.yaw + 360) % 360;
+                    if(yaw > 180) {
+                        yaw -= 360;
+                    }
+
                     if (pitch != targetPitch) {
                         changed = true;
-                        float pDiff = Math.abs(targetPitch - pitch);
-                        if (pDiff > speed) {
+                        if (Math.abs(targetPitch - pitch) > speed) {
                             float movement;
                             if (pitch > targetPitch) {
                                 movement = -speed;
@@ -106,19 +113,21 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
                         }
                     }
 
-                    if (mount.yaw != targetYaw) {
+                    if (yaw != targetYaw) {
                         changed = true;
-                        float yaw = (mount.yaw + 360) % 360;
-                        float tYaw = (targetYaw + 360) % 360;
-                        float yDiff = tYaw - yaw;
-                        if (Math.abs(yDiff) > speed) {
+                        float yawDiff = targetYaw - yaw;
+                        if (Math.abs(yawDiff) > speed) {
                             float movement;
-                            if (yDiff > 0) {
+                            if (yawDiff > 180) {
+                                movement = -speed;
+                            } else if (yawDiff < -180) {
                                 movement = speed;
-                            } else  {
+                            } else if(yawDiff > 0) {
+                                movement = speed;
+                            } else {
                                 movement = -speed;
                             }
-                            cannon.setYaw(mount.yaw + movement);
+                            cannon.setYaw(yaw + movement);
                         } else {
                             cannon.setYaw(targetYaw);
                         }
@@ -177,7 +186,10 @@ public class CannonControllerBlockEntity extends KineticBlockEntity implements  
 
     public void setTarget(float pitch, float yaw) {
         setting = true;
-        this.targetYaw = yaw;
+        this.targetYaw = Math.abs(yaw) % 360;
+        if(targetYaw > 180) {
+            targetYaw -= 360;
+        }
         this.targetPitch = pitch;
     }
 
