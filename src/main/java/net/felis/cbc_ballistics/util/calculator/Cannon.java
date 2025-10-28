@@ -78,16 +78,10 @@ public class Cannon {
 
     public float getYaw() {
         double xDistance = cannonPos.getX() - target.getX();
-        float rawYaw = (float) (Math.atan((cannonPos.getZ() - target.getZ()) / xDistance) * (180 / Math.PI));
-        /*
-        if(xDistance == 0) {
-            rawYaw = 0;
-        }
-
-         */
         if(xDistance == 0) {
             return 0;
         }
+        float rawYaw = (float) (Math.atan((cannonPos.getZ() - target.getZ()) / xDistance) * (180 / Math.PI));
         if(xDistance >= 0) {
             rawYaw += 180;
         }
